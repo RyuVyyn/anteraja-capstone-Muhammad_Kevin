@@ -1,4 +1,4 @@
-# Functional Requirements Document (FRD) v2
+# Functional Requirements Document (FRD)
 ## Fitur 04: Engine Rekomendasi Berbasis Aturan (Rule-Based Wisdom)
 **Proyek**: Anteraja Shipping Rate Calculator Optimization (MVP 2-Bulan)
 
@@ -42,7 +42,10 @@ graph TD
 
 | No. BR | Kondisi / Trigger | Hasil / Perhitungan | Pengecualian | Dikonfirmasi Ke |
 | :--- | :--- | :--- | :--- | :--- |
-| **BR-09** | Decision Tree Rekomendasi | **Aturan 1**: Margin $\le 30\%$ & Delta $\le 	ext{Rp } 10.000 ightarrow$ **Reguler**.<br>**Aturan 2**: Margin Merah ($>30\%$) ATAU Berat $>5	ext{ kg} ightarrow$ **Ekonomi**.<br>**Aturan 3**: Harga $> 	ext{Rp } 1	ext{ Juta}$ & Margin Next Day $\le 10\% ightarrow$ **Next Day**.<br>**Aturan Default**: Pilih **Reguler**. | Tepat $1$ opsi layanan ditandai `is_recommended = TRUE`. | Pemilik Proses |
+| **BR-09** | Decision Tree Rekomendasi | **Aturan 1**: Margin $\le 30\%$ & Delta $\le 	ext{Rp } 10.000 
+ightarrow$ **Reguler**.<br>**Aturan 2**: Margin Merah ($>30\%$) ATAU Berat $>5	ext{ kg} 
+ightarrow$ **Ekonomi**.<br>**Aturan 3**: Harga $> 	ext{Rp } 1	ext{ Juta}$ & Margin Next Day $\le 10\% 
+ightarrow$ **Next Day**.<br>**Aturan Default**: Pilih **Reguler**. | Tepat $1$ opsi layanan ditandai `is_recommended = TRUE`. | Pemilik Proses |
 | **BR-10** | Teks Alasan Rekomendasi | Dihasilkan dinamis (1-2 kalimat) menjelaskan *trade-off* hemat harga vs kecepatan SLA. | Teks bersifat deterministik berdasarkan *rule code* yang aktif. | Pemilik Proses |
 
 ---
@@ -78,7 +81,8 @@ graph TD
 - **Langkah & Hasil**:
   1. Engine mengevaluasi Aturan 1: Tidak ada layanan dengan margin $\le 30\%$.
   2. Engine mengevaluasi Aturan 2: Seluruh layanan berwarna MERAH ($>30\%$).
-  3. Aturan 2 terpenuhi $ightarrow$ Sistem memilih **Ekonomi** sebagai `is_recommended = TRUE`.
+  3. Aturan 2 terpenuhi $
+ightarrow$ Sistem memilih **Ekonomi** sebagai `is_recommended = TRUE`.
   4. Generator teks menghasilkan alasan: *"Layanan Ekonomi direkomendasikan untuk menekan rasio ongkir yang tinggi, menghemat Rp 6.000 (25%) dibanding Reguler"*.
   5. Kartu Ekonomi tampil di posisi teratas dengan badge emas "REKOMENDASI UTAMA".
 

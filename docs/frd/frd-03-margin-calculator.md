@@ -1,4 +1,4 @@
-# Functional Requirements Document (FRD) v2
+# Functional Requirements Document (FRD)
 ## Fitur 03: Kalkulator Margin Sederhana
 **Proyek**: Anteraja Shipping Rate Calculator Optimization (MVP 2-Bulan)
 

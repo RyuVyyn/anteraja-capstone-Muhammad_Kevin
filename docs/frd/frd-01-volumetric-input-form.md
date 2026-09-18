@@ -1,4 +1,4 @@
-# Functional Requirements Document (FRD) v2
+# Functional Requirements Document (FRD)
 ## Fitur 01: Form Input Pengiriman & Volumetrik
 **Proyek**: Anteraja Shipping Rate Calculator Optimization (MVP 2-Bulan)
 
