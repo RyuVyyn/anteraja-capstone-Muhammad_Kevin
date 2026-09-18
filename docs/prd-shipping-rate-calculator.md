@@ -1,5 +1,5 @@
-# Product Requirements Document (PRD) v2
-## Proyek: Anteraja Shipping Rate Calculator Optimization (MVP 2-Bulan)
+# Product Requirements Document (PRD)
+## Proyek: Anteraja Shipping Rate Calculator Optimization
 
 ---
 
