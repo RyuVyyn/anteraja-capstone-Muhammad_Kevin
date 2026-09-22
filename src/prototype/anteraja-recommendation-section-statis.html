@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="web_standard" name="shell-type">
+  <title>Rekomendasi Pengiriman Hemat - Anteraja (Versi Statis)</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link href="anteraja-cek-ongkir-ramah-umkm-statis.css" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl) var(--space-md);
+      background: linear-gradient(135deg, rgba(248, 249, 255, 0.9) 0%, rgba(229, 238, 255, 0.9) 100%);
+    }
+    .recommendation-wrapper {
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .recommendation-section {
+      margin-bottom: 0;
+      width: 100%;
+    }
+    .btn-reco-close {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="recommendation-wrapper">
+    <!-- Recommendation Section (Standalone) -->
+    <section class="recommendation-section" aria-labelledby="recommendationTitle">
+      <header class="reco-header">
+        <div class="reco-header-left">
+          <div class="reco-icon" aria-hidden="true">
+            <span class="material-symbols-outlined" style="font-size:24px">hotel_class</span>
+          </div>
+          <div>
+            <div class="reco-labels">
+              <span class="reco-label-primary">REKOMENDASI ANTERAJA</span>
+              <span class="reco-label-sep" aria-hidden="true">•</span>
+              <span class="reco-label-secondary">PILIHAN PALING HEMAT</span>
+            </div>
+            <h1 id="recommendationTitle" class="reco-title">Saran Pengiriman Terbaik untuk Toko Anda</h1>
+          </div>
+        </div>
+        <a href="anteraja-cek-ongkir-ramah-umkm-statis.html" class="modal-close-btn" aria-label="Tutup rekomendasi" style="text-decoration:none;color:var(--color-secondary);font-size:20px;display:flex;align-items:center;justify-content:center;">
+          <span class="material-symbols-outlined">close</span>
+        </a>
+      </header>
+
+      <div class="reco-card">
+        <div class="reco-card-left">
+          <span class="reco-card-category">Pilihan Paling Hemat</span>
+          <h2 class="reco-card-name">Anteraja Ekonomi</h2>
+          <span class="reco-card-eta">Perkiraan sampai: 3 - 5 Hari</span>
+        </div>
+        <div class="reco-card-right">
+          <span class="reco-card-price">Rp 18.000</span>
+          <span class="reco-card-badge">Porsi ongkir paling ramah kantong</span>
+        </div>
+      </div>
+
+      <section class="reco-explanation" aria-label="Penjelasan Nilai Rekomendasi">
+        <h3 style="font-size:13px;line-height:18px;font-weight:700;color:var(--color-on-surface);display:flex;align-items:center;gap:var(--space-2xs);margin:0;">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--color-tertiary)" aria-hidden="true">verified</span>
+          Kenapa layanan ini pas untuk toko Anda?
+        </h3>
+        <p>
+          Layanan <strong>Anteraja Ekonomi</strong> direkomendasikan agar biaya kirim tidak terlalu membebani harga barang Anda. Anda menghemat <strong>Rp 6.000 (25%)</strong> dibanding layanan standar reguler, dengan waktu sampai yang tetap wajar untuk belanja online.
+        </p>
+      </section>
+
+      <div class="reco-stats">
+        <div class="reco-stat-card">
+          <span class="reco-stat-label">Penghematan Ongkir</span>
+          <span class="reco-stat-value reco-stat-value--tertiary">Hemat Rp 6.000 (25%)</span>
+        </div>
+        <div class="reco-stat-card">
+          <span class="reco-stat-label">Waktu Pengiriman</span>
+          <span class="reco-stat-value reco-stat-value--on-surface">Selisih 1 - 2 Hari dibanding Reguler</span>
+        </div>
+      </div>
+
+      <footer class="reco-footer">
+        <a href="anteraja-cek-ongkir-ramah-umkm-statis.html" class="btn-reco-close">
+          Tutup
+        </a>
+        <a href="anteraja-cek-ongkir-ramah-umkm-statis.html" class="btn-reco-select" style="text-decoration:none;">
+          <span>Pilih Layanan Ini ✓</span>
+          <span class="material-symbols-outlined" style="font-size:16px" aria-hidden="true">check</span>
+        </a>
+      </footer>
+    </section>
+  </div>
+</body>
+</html>
