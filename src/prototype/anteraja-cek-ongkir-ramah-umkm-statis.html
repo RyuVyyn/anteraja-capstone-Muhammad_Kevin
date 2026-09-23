@@ -10,6 +10,62 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <link href="anteraja-cek-ongkir-ramah-umkm-statis.css" rel="stylesheet">
+
+  <!-- Data Terstruktur (Schema.org JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://anteraja.id/#calculator",
+        "name": "Kalkulator Cek Tarif & Estimasi Pengiriman Anteraja",
+        "url": "https://anteraja.id/cek-ongkir",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires HTML5 and CSS3 support.",
+        "description": "Kalkulator ongkos kirim akurat ramah UMKM berbasis perhitungan volumetrik dan kalkulator rasio margin keuntungan toko.",
+        "provider": {
+          "@type": "Organization",
+          "name": "Anteraja (PT Tri Adi Bersama)",
+          "url": "https://anteraja.id",
+          "logo": "https://anteraja.id/assets/images/logo-anteraja.png",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+62-21-5066-3333",
+            "contactType": "customer service",
+            "email": "cs@anteraja.id",
+            "areaServed": "ID",
+            "availableLanguage": ["id", "en"]
+          }
+        },
+        "featureList": [
+          "Perhitungan Berat Volumetrik Otomatis (P x L x T / 6000)",
+          "Perbandingan Layanan Berdampingan (Ekonomi, Reguler, Next Day, Same Day)",
+          "Kalkulator Rasio Dampak Margin Keuntungan Toko",
+          "Engine Rekomendasi Layanan Terbaik Ramah UMKM"
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Kalkulator Ongkir & Estimasi Pengiriman",
+            "item": "https://anteraja.id/cek-ongkir"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Bandung ke Surabaya",
+            "item": "https://anteraja.id/cek-ongkir?origin=Bandung&destination=Surabaya"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <!-- Header & Navigation -->
