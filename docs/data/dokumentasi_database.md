@@ -1,8 +1,7 @@
 # Dokumentasi Database
 ## Kalkulator Ongkir & Margin Anteraja
 
-Dokumen ini menjelaskan struktur database yang dipakai untuk fitur Form Input, Perbandingan Layanan, Kalkulator Margin, dan Engine Rekomendasi. Cakupannya mengikuti `frd_gabungan_anteraja.md`, jadi tabel yang tidak berhubungan dengan empat fitur itu (misalnya penyimpanan akun pengguna dan pelacakan upsell BisnisAja) sengaja tidak dimasukkan.
-
+Dokumen ini menjelaskan struktur database yang dipakai untuk fitur Form Input, Perbandingan Layanan, Kalkulator Margin, dan Engine Rekomendasi. Cakupannya mengikuti FRD 01-04.
 ---
 
 ## 1 · Gambaran Umum
@@ -120,8 +119,8 @@ Sementara itu, **`locations`** berdiri sendiri sebagai daftar kota rujukan untuk
 ## 4 · Cara Pakai File yang Disediakan
 
 - **`schema.sql`** — berisi perintah untuk membuat kelima tabel di atas dari nol (tanpa isi data). Jalankan file ini lebih dulu di database yang masih kosong.
-- **`seeder_dummy_data_trimmed.sql`** — berisi perintah untuk membuat kelima tabel sekaligus mengisinya dengan data contoh. Cocok dipakai langsung untuk mencoba-coba atau keperluan demo, tanpa perlu menjalankan `schema.sql` lebih dulu.
+- **`seeder.sql`** — berisi perintah untuk membuat kelima tabel sekaligus mengisinya dengan data contoh. Cocok dipakai langsung untuk mencoba-coba atau keperluan demo, tanpa perlu menjalankan `schema.sql` lebih dulu.
 
 Urutan menjalankan yang disarankan:
-1. Jika database masih kosong dan ingin diisi data contoh langsung, cukup jalankan `seeder_dummy_data_trimmed.sql` saja.
+1. Jika database masih kosong dan ingin diisi data contoh langsung, cukup jalankan `seeder.sql` saja.
 2. Jika hanya ingin struktur tabelnya tanpa data contoh (misalnya untuk lingkungan produksi), jalankan `schema.sql` saja.
