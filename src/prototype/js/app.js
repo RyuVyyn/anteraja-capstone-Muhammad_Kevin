@@ -260,6 +260,109 @@ function handleFilterTab(filterKey, elements) {
   }
 }
 
+// ── Interaksi 5: Pemilihan kartu layanan & toast summary ────────
+
+let toastTimeoutId = null;
+
+/**
+ * Menampilkan floating toast summary berisi info layanan yang dipilih.
+ * @param {{ name: string, price: string, eta: string }} info
+ */
+function tampilkanToastSummary({ name, price, eta }) {
+  let toast = document.querySelector('.toast-summary');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast-summary';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+  }
+
+  // Bersihkan timer dismiss sebelumnya
+  if (toastTimeoutId) {
+    clearTimeout(toastTimeoutId);
+  }
+
+  toast.innerHTML = `
+    <span class="material-symbols-outlined" style="color:var(--color-primary);font-size:20px" aria-hidden="true">check_circle</span>
+    <span>Layanan: <strong>${name}</strong></span>
+    <span class="toast-summary__dot">•</span>
+    <span>Tarif: <strong>${price}</strong></span>
+    <span class="toast-summary__dot">•</span>
+    <span>Estimasi: ${eta}</span>
+    <button type="button" class="toast-close-btn" aria-label="Tutup ringkasan" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;margin-left:8px;display:inline-flex;align-items:center;">
+      <span class="material-symbols-outlined" style="font-size:18px">close</span>
+    </button>
+  `;
+
+  // Tombol close toast
+  const closeBtn = toast.querySelector('.toast-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      toast.remove();
+    });
+  }
+
+  // Auto dismiss setelah 4 detik
+  toastTimeoutId = setTimeout(() => {
+    toast.remove();
+  }, 4000);
+}
+
+/**
+ * Menandai layanan yang dipilih pengguna, mengupdate visual kartu dan tombol.
+ * @param {string} serviceId - ID layanan ('ekonomi', 'reguler', 'nextday', dll)
+ * @param {object} elements - Objek elemen dari getElements()
+ * @param {{ silent?: boolean }} [options] - Jika true, tidak memunculkan toast
+ */
+function pilihLayanan(serviceId, elements, options = {}) {
+  const targetCard = Array.from(elements.serviceCards).find(
+    (card) => card.getAttribute('data-service-id') === serviceId
+  );
+
+  if (!targetCard || targetCard.getAttribute('data-disabled') === 'true') {
+    return;
+  }
+
+  state.selectedService = serviceId;
+
+  // Perbarui styling semua kartu
+  for (const card of elements.serviceCards) {
+    const isTarget = card === targetCard;
+    const btnPilih = card.querySelector('.btn-pilih');
+    const cardCheck = card.querySelector('.card-check');
+
+    if (isTarget) {
+      card.classList.add('service-card--selected');
+      if (cardCheck) {
+        cardCheck.className = 'card-check card-check--selected';
+        cardCheck.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">check</span>';
+      }
+      if (btnPilih) {
+        btnPilih.classList.add('btn-pilih--selected');
+        btnPilih.innerHTML = '<span>Layanan Terpilih</span><span class="material-symbols-outlined" style="font-size:16px" aria-hidden="true">check</span>';
+      }
+    } else if (card.getAttribute('data-disabled') !== 'true') {
+      card.classList.remove('service-card--selected');
+      if (cardCheck) {
+        cardCheck.className = 'card-check card-check--empty';
+        cardCheck.innerHTML = '<span></span>';
+      }
+      if (btnPilih) {
+        btnPilih.classList.remove('btn-pilih--selected');
+        btnPilih.innerHTML = '<span>Pilih Layanan</span><span class="material-symbols-outlined" style="font-size:16px" aria-hidden="true">arrow_forward</span>';
+      }
+    }
+  }
+
+  if (!options.silent) {
+    const name = targetCard.getAttribute('data-service-name') || 'Layanan Anteraja';
+    const price = targetCard.getAttribute('data-service-price') || '-';
+    const eta = targetCard.getAttribute('data-service-eta') || '-';
+    tampilkanToastSummary({ name, price, eta });
+  }
+}
+
 // ── Inisialisasi ────────────────────────────────────────────────
 function init() {
   const elements = getElements();
@@ -297,6 +400,31 @@ function init() {
       handleFilterTab(filterKey, elements);
     });
   }
+
+  // Interaksi 5: Pemilihan kartu layanan & toast summary
+  for (const card of elements.serviceCards) {
+    const serviceId = card.getAttribute('data-service-id');
+    const isDisabled = card.getAttribute('data-disabled') === 'true';
+    if (!serviceId || isDisabled) continue;
+
+    // Klik tombol Pilih Layanan
+    const btnPilih = card.querySelector('.btn-pilih');
+    if (btnPilih) {
+      btnPilih.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pilihLayanan(serviceId, elements);
+      });
+    }
+
+    // Klik area kartu layanan (abaikan klik link rekomendasi)
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      pilihLayanan(serviceId, elements);
+    });
+  }
+
+  // Set pilihan awal ke layanan default ('ekonomi') secara hening
+  pilihLayanan('ekonomi', elements, { silent: true });
 }
 
 document.addEventListener('DOMContentLoaded', init);
