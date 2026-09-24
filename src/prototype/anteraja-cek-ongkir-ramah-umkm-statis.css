@@ -1765,6 +1765,101 @@ fieldset {
 .footer-copyright p { margin: 0; }
 
 /* ================================================================
+   JS INTERACTION UTILITIES
+   ================================================================ */
+
+/* Interaksi 1: Error state pada input */
+.input-error {
+  outline: 2px solid var(--color-error) !important;
+  background-color: rgba(186, 26, 26, 0.04) !important;
+}
+
+.input-error-msg {
+  display: block;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  color: var(--color-error);
+  margin-top: var(--space-2xs);
+}
+
+/* Interaksi 3: Loading state tombol submit */
+.btn-submit--loading {
+  opacity: 0.7;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.btn-submit__spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--color-on-primary);
+  border-radius: 50%;
+}
+
+.btn-submit__success {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-badge-cheapest-bg);
+  color: var(--color-badge-cheapest-text);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: var(--space-sm);
+}
+
+/* Interaksi 4: Card visibility toggle */
+.card-hidden {
+  display: none !important;
+}
+
+/* Interaksi 5: Selected card state */
+.service-card--selected {
+  border: 2px solid var(--color-border-selected) !important;
+  box-shadow: 0 10px 15px -3px rgba(237, 6, 119, 0.15), 0 4px 6px -4px rgba(237, 6, 119, 0.1) !important;
+}
+
+.card-check--selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-on-primary) !important;
+}
+
+.btn-pilih--selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-on-primary) !important;
+  font-weight: 700 !important;
+}
+
+/* Interaksi 5: Toast summary */
+.toast-summary {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-inverse-surface);
+  color: var(--color-inverse-on-surface);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  z-index: 100;
+  max-width: 90vw;
+  white-space: nowrap;
+}
+
+.toast-summary__dot {
+  color: var(--color-outline-variant);
+}
+
+/* ================================================================
    RESPONSIVE: sm (≥640px)
    ================================================================ */
 @media (min-width: 640px) {

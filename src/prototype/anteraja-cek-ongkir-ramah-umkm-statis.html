@@ -157,9 +157,9 @@
             <div class="form-group fg-col-2">
               <label class="form-label">Dimensi P x L x T (cm)</label>
               <div class="dimension-grid">
-                <input aria-label="Panjang paket dalam sentimeter" class="dimension-input" title="Panjang" type="text" value="30">
-                <input aria-label="Lebar paket dalam sentimeter" class="dimension-input" title="Lebar" type="text" value="20">
-                <input aria-label="Tinggi paket dalam sentimeter" class="dimension-input" title="Tinggi" type="text" value="20">
+                <input id="dimPanjang" aria-label="Panjang paket dalam sentimeter" class="dimension-input" data-dimension="panjang" title="Panjang" type="text" value="30">
+                <input id="dimLebar" aria-label="Lebar paket dalam sentimeter" class="dimension-input" data-dimension="lebar" title="Lebar" type="text" value="20">
+                <input id="dimTinggi" aria-label="Tinggi paket dalam sentimeter" class="dimension-input" data-dimension="tinggi" title="Tinggi" type="text" value="20">
               </div>
             </div>
             <!-- Harga Jual Produk -->
@@ -626,6 +626,6 @@
     </div>
   </footer>
 
-  <!-- No JavaScript — fully static page -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
