@@ -177,6 +177,21 @@ function updateVolumeSummary(elements) {
 // ── Interaksi 3: Submit kalkulator & loading state ──────────────
 
 /**
+ * Menggulir tampilan ke elemen target dengan menghormati preferensi motion pengguna.
+ * @param {HTMLElement|null} element - Elemen target untuk scroll
+ */
+function scrollKeHasilLayanan(element) {
+  if (!element) return;
+  const prefersReducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+  element.scrollIntoView({
+    behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    block: 'start',
+  });
+}
+
+/**
  * Handler submit formulir cek ongkir dengan simulasi loading dan feedback.
  * @param {Event} event
  * @param {object} elements - Objek elemen dari getElements()
@@ -213,6 +228,9 @@ function handleSubmitForm(event, elements) {
     elements.btnSubmit.classList.remove('btn-submit--loading');
     elements.btnSubmit.disabled = false;
     elements.btnSubmit.innerHTML = originalHTML;
+
+    // Scroll ke bagian hasil layanan (hanya pada jalur sukses)
+    scrollKeHasilLayanan(elements.servicesGrid);
 
     // Perbarui volumetrik kembali untuk sinkronisasi data
     updateVolumeSummary(elements);
