@@ -12,7 +12,13 @@ import {
   hitungBeratVolumetrik,
   tentukanBeratDihitung,
 } from './utils.js';
-import { DELAY_LOADER_MS, TEKS_TOMBOL, FILTER_MAP } from './constants.js';
+import {
+  DELAY_LOADER_MS,
+  DURASI_FEEDBACK_SUKSES_MS,
+  DURASI_TOAST_MS,
+  TEKS_TOMBOL,
+  FILTER_MAP,
+} from './constants.js';
 
 // ── State terpusat ──────────────────────────────────────────────
 const state = {
@@ -220,7 +226,7 @@ function handleSubmitForm(event, elements) {
 
     setTimeout(() => {
       feedbackEl.remove();
-    }, 3000);
+    }, DURASI_FEEDBACK_SUKSES_MS);
   }, DELAY_LOADER_MS);
 }
 
@@ -303,10 +309,10 @@ function tampilkanToastSummary({ name, price, eta }) {
     });
   }
 
-  // Auto dismiss setelah 4 detik
+  // Auto dismiss setelah durasi toast
   toastTimeoutId = setTimeout(() => {
     toast.remove();
-  }, 4000);
+  }, DURASI_TOAST_MS);
 }
 
 /**

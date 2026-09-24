@@ -10,6 +10,12 @@ export const DIVISOR_VOLUMETRIK = 6000;
 /** Durasi loading spinner pada tombol Hitung Ongkir (ms) */
 export const DELAY_LOADER_MS = 800;
 
+/** Durasi notifikasi feedback sukses kalkulasi ditampilkan (ms) */
+export const DURASI_FEEDBACK_SUKSES_MS = 3000;
+
+/** Durasi floating toast summary layanan ditampilkan (ms) */
+export const DURASI_TOAST_MS = 4000;
+
 /** Locale untuk formatting angka Indonesia */
 export const LOCALE_ID = 'id-ID';
 
