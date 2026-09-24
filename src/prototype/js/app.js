@@ -12,12 +12,14 @@ import {
   hitungBeratVolumetrik,
   tentukanBeratDihitung,
 } from './utils.js';
-import { DELAY_LOADER_MS, TEKS_TOMBOL } from './constants.js';
+import { DELAY_LOADER_MS, TEKS_TOMBOL, FILTER_MAP } from './constants.js';
 
 // ── State terpusat ──────────────────────────────────────────────
 const state = {
   /** @type {string|null} ID layanan terpilih */
   selectedService: null,
+  /** @type {string} Kategori filter tab aktif */
+  activeFilter: 'all',
   /** @type {boolean} Apakah form sedang loading */
   isSubmitting: false,
 };
@@ -222,6 +224,42 @@ function handleSubmitForm(event, elements) {
   }, DELAY_LOADER_MS);
 }
 
+// ── Interaksi 4: Filter tab kategori layanan ────────────────────
+
+/**
+ * Menyaring kartu layanan pengiriman berdasarkan kategori yang dipilih.
+ * @param {string} filterKey - Kunci filter ('all', 'cheapest', 'fastest', 'recommended')
+ * @param {object} elements - Objek elemen dari getElements()
+ */
+function handleFilterTab(filterKey, elements) {
+  state.activeFilter = filterKey;
+
+  // Update tampilan tab filter (active/inactive state & aria-selected)
+  for (const tab of elements.filterTabs) {
+    const tabFilter = tab.getAttribute('data-filter');
+    const isActive = tabFilter === filterKey;
+    tab.classList.toggle('filter-tab--active', isActive);
+    tab.classList.toggle('filter-tab--inactive', !isActive);
+    tab.setAttribute('aria-selected', String(isActive));
+  }
+
+  const targetTag = FILTER_MAP[filterKey];
+
+  // Tampilkan / sembunyikan kartu layanan sesuai kriteria filter
+  for (const card of elements.serviceCards) {
+    if (!targetTag) {
+      card.classList.remove('card-hidden');
+    } else {
+      const tags = (card.getAttribute('data-tags') || '').split(',');
+      if (tags.includes(targetTag)) {
+        card.classList.remove('card-hidden');
+      } else {
+        card.classList.add('card-hidden');
+      }
+    }
+  }
+}
+
 // ── Inisialisasi ────────────────────────────────────────────────
 function init() {
   const elements = getElements();
@@ -250,6 +288,14 @@ function init() {
   // Interaksi 3: Submit kalkulator & loading state
   if (elements.form) {
     elements.form.addEventListener('submit', (e) => handleSubmitForm(e, elements));
+  }
+
+  // Interaksi 4: Filter tab kategori layanan
+  for (const tab of elements.filterTabs) {
+    tab.addEventListener('click', () => {
+      const filterKey = tab.getAttribute('data-filter') || 'all';
+      handleFilterTab(filterKey, elements);
+    });
   }
 }
 

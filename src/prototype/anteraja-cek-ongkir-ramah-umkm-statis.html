@@ -244,10 +244,10 @@
       <!-- Quick Navigation Filters & Selection Bar -->
       <nav aria-label="Filter Layanan Pengiriman" class="filter-nav">
         <div role="tablist" aria-label="Kategori Filter" class="filter-tabs">
-          <button role="tab" aria-selected="true" class="filter-tab filter-tab--active">Semua Layanan (4)</button>
-          <button role="tab" aria-selected="false" class="filter-tab filter-tab--inactive">Paling Hemat</button>
-          <button role="tab" aria-selected="false" class="filter-tab filter-tab--inactive">Paling Cepat</button>
-          <button role="tab" aria-selected="false" class="filter-tab filter-tab--inactive">Saran Terbaik</button>
+          <button role="tab" aria-selected="true" class="filter-tab filter-tab--active" data-filter="all">Semua Layanan (4)</button>
+          <button role="tab" aria-selected="false" class="filter-tab filter-tab--inactive" data-filter="cheapest">Paling Hemat</button>
+          <button role="tab" aria-selected="false" class="filter-tab filter-tab--inactive" data-filter="fastest">Paling Cepat</button>
+          <button role="tab" aria-selected="false" class="filter-tab filter-tab--inactive" data-filter="recommended">Saran Terbaik</button>
         </div>
         <div class="filter-actions">
           <a href="anteraja-recommendation-section-statis.html" class="btn-reco-link" style="text-decoration:none">
@@ -259,7 +259,7 @@
       <!-- 2, 3, 4. SIDE-BY-SIDE SERVICE MATRIX -->
       <section aria-label="Pilihan Layanan Pengiriman" class="services-grid">
         <!-- Kartu 1: Anteraja Ekonomi (Paling Hemat) -->
-        <article class="service-card service-card--primary">
+        <article class="service-card service-card--primary" data-service-id="ekonomi" data-tags="cheapest,recommended" data-service-name="Anteraja Ekonomi" data-service-price="Rp 18.000" data-service-eta="3 - 5 Hari">
           <header class="card-ribbon card-ribbon--primary">
             <span class="ribbon-label">
               <span class="material-symbols-outlined" style="font-size:15px" aria-hidden="true">star</span>PILIHAN PALING HEMAT
@@ -310,7 +310,7 @@
         </article>
 
         <!-- Kartu 2: Anteraja Reguler -->
-        <article class="service-card service-card--default">
+        <article class="service-card service-card--default" data-service-id="reguler" data-tags="regular" data-service-name="Anteraja Reguler" data-service-price="Rp 24.000" data-service-eta="2 - 3 Hari">
           <div class="card-body">
             <div class="card-info">
               <header class="card-title-row">
@@ -351,7 +351,7 @@
         </article>
 
         <!-- Kartu 3: Anteraja Next Day -->
-        <article class="service-card service-card--default">
+        <article class="service-card service-card--default" data-service-id="nextday" data-tags="fastest" data-service-name="Anteraja Next Day" data-service-price="Rp 36.000" data-service-eta="1 Hari (Besok Sampai)">
           <header class="card-ribbon card-ribbon--fastest">
             <span class="ribbon-label">
               <span class="material-symbols-outlined" style="font-size:14px" aria-hidden="true">bolt</span>PALING CEPAT
@@ -398,7 +398,7 @@
         </article>
 
         <!-- Kartu 4: Anteraja Same Day (Tidak Tersedia) -->
-        <article class="service-card service-card--disabled">
+        <article class="service-card service-card--disabled" data-service-id="sameday" data-tags="sameday" data-service-name="Anteraja Same Day" data-service-price="-" data-service-eta="Tidak Tersedia" data-disabled="true">
           <header class="card-ribbon card-ribbon--disabled">
             <span class="ribbon-label" style="text-transform:uppercase;letter-spacing:0.05em">Same Day</span>
             <span class="ribbon-badge--error">Tidak Tersedia</span>
