@@ -5,7 +5,13 @@
  *              Menggunakan ES module, tanpa variabel global.
  */
 
-import { parseAngka, formatRibuan, validasiAngka } from './utils.js';
+import {
+  parseAngka,
+  formatRibuan,
+  validasiAngka,
+  hitungBeratVolumetrik,
+  tentukanBeratDihitung,
+} from './utils.js';
 
 // ── State terpusat ──────────────────────────────────────────────
 const state = {
@@ -21,9 +27,15 @@ function getElements() {
     form: document.getElementById('shippingForm'),
     priceInput: document.getElementById('priceInput'),
     weightInput: document.getElementById('weightInput'),
+    dimPanjang: document.getElementById('dimPanjang'),
+    dimLebar: document.getElementById('dimLebar'),
+    dimTinggi: document.getElementById('dimTinggi'),
     dimensionInputs: document.querySelectorAll('.dimension-input'),
     btnSubmit: document.querySelector('.btn-submit'),
     volumeSummary: document.querySelector('.volume-summary'),
+    volBold: document.querySelector('.vol-bold'),
+    volNormal: document.querySelector('.vol-normal'),
+    volPrimary: document.querySelector('.vol-primary'),
     filterTabs: document.querySelectorAll('.filter-tab'),
     serviceCards: document.querySelectorAll('.service-card'),
     servicesGrid: document.querySelector('.services-grid'),
@@ -117,6 +129,42 @@ function validasiSemuaInput(elements) {
   return semuaValid;
 }
 
+// ── Interaksi 2: Berat volumetrik real-time ─────────────────────
+
+/**
+ * Membaca nilai dimensi & berat dari input, menghitung volumetrik,
+ * lalu memperbarui teks di .volume-summary.
+ * @param {object} elements - Objek elemen dari getElements()
+ */
+function updateVolumeSummary(elements) {
+  const panjang = parseAngka(elements.dimPanjang.value) || 0;
+  const lebar = parseAngka(elements.dimLebar.value) || 0;
+  const tinggi = parseAngka(elements.dimTinggi.value) || 0;
+
+  // Berat: hapus satuan "kg" jika ada
+  const rawWeight = elements.weightInput.value.replace(/\s*kg\s*/gi, '');
+  const beratAktual = parseAngka(rawWeight) || 0;
+
+  const beratVolumetrik = hitungBeratVolumetrik({ panjang, lebar, tinggi });
+  const { beratDihitung, ikutVolume } = tentukanBeratDihitung({
+    beratAktual,
+    beratVolumetrik,
+  });
+
+  if (elements.volBold) {
+    elements.volBold.textContent = `Ukuran Volume: ${beratVolumetrik} kg`;
+  }
+  if (elements.volNormal) {
+    elements.volNormal.textContent = `Berat Aktual: ${beratAktual} kg`;
+  }
+  if (elements.volPrimary) {
+    const keterangan = ikutVolume
+      ? '(mengikuti volume paket)'
+      : '(mengikuti berat aktual)';
+    elements.volPrimary.textContent = `Berat Dihitung: ${beratDihitung} kg ${keterangan}`;
+  }
+}
+
 // ── Inisialisasi ────────────────────────────────────────────────
 function init() {
   const elements = getElements();
@@ -131,6 +179,16 @@ function init() {
     input.addEventListener('input', handleFormatInput);
     input.addEventListener('blur', handleValidasiBlur);
   }
+
+  // Interaksi 2: Berat volumetrik real-time
+  const volumeInputs = [
+    elements.weightInput,
+    ...elements.dimensionInputs,
+  ];
+  for (const input of volumeInputs) {
+    input.addEventListener('input', () => updateVolumeSummary(elements));
+  }
+  updateVolumeSummary(elements);
 }
 
 document.addEventListener('DOMContentLoaded', init);
