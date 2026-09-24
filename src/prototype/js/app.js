@@ -12,6 +12,7 @@ import {
   hitungBeratVolumetrik,
   tentukanBeratDihitung,
 } from './utils.js';
+import { DELAY_LOADER_MS, TEKS_TOMBOL } from './constants.js';
 
 // ── State terpusat ──────────────────────────────────────────────
 const state = {
@@ -165,6 +166,62 @@ function updateVolumeSummary(elements) {
   }
 }
 
+// ── Interaksi 3: Submit kalkulator & loading state ──────────────
+
+/**
+ * Handler submit formulir cek ongkir dengan simulasi loading dan feedback.
+ * @param {Event} event
+ * @param {object} elements - Objek elemen dari getElements()
+ */
+function handleSubmitForm(event, elements) {
+  event.preventDefault();
+
+  if (state.isSubmitting) return;
+
+  const valid = validasiSemuaInput(elements);
+  if (!valid) {
+    const firstError = elements.form.querySelector('.input-error');
+    if (firstError) {
+      firstError.focus();
+    }
+    return;
+  }
+
+  // Set loading state
+  state.isSubmitting = true;
+  elements.btnSubmit.classList.add('btn-submit--loading');
+  elements.btnSubmit.disabled = true;
+  const originalHTML = elements.btnSubmit.innerHTML;
+  elements.btnSubmit.innerHTML = `<span class="btn-submit__spinner" aria-hidden="true"></span> ${TEKS_TOMBOL.LOADING}`;
+
+  // Hapus feedback sebelumnya jika ada
+  const existingFeedback = elements.form.querySelector('.btn-submit__success');
+  if (existingFeedback) {
+    existingFeedback.remove();
+  }
+
+  setTimeout(() => {
+    state.isSubmitting = false;
+    elements.btnSubmit.classList.remove('btn-submit--loading');
+    elements.btnSubmit.disabled = false;
+    elements.btnSubmit.innerHTML = originalHTML;
+
+    // Perbarui volumetrik kembali untuk sinkronisasi data
+    updateVolumeSummary(elements);
+
+    // Tampilkan pesan sukses
+    const feedbackEl = document.createElement('div');
+    feedbackEl.className = 'btn-submit__success';
+    feedbackEl.setAttribute('role', 'status');
+    feedbackEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px" aria-hidden="true">check_circle</span> Tarif pengiriman berhasil diperbarui!';
+    elements.btnSubmit.parentElement.appendChild(feedbackEl);
+
+    setTimeout(() => {
+      feedbackEl.remove();
+    }, 3000);
+  }, DELAY_LOADER_MS);
+}
+
 // ── Inisialisasi ────────────────────────────────────────────────
 function init() {
   const elements = getElements();
@@ -189,6 +246,11 @@ function init() {
     input.addEventListener('input', () => updateVolumeSummary(elements));
   }
   updateVolumeSummary(elements);
+
+  // Interaksi 3: Submit kalkulator & loading state
+  if (elements.form) {
+    elements.form.addEventListener('submit', (e) => handleSubmitForm(e, elements));
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
