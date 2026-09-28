@@ -1511,6 +1511,51 @@ fieldset {
   margin-top: var(--space-2xs);
 }
 
+.async-data-panel {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(182, 0, 89, 0.04), rgba(8, 145, 178, 0.04));
+  border: 1px solid rgba(182, 0, 89, 0.12);
+}
+
+.async-data-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--color-on-surface);
+}
+
+.async-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  padding: var(--space-2xs) var(--space-sm);
+}
+
+.async-status--loading {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+}
+
+.async-status--error {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--color-error);
+}
+
+.async-data-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--color-secondary);
+  display: grid;
+  gap: var(--space-2xs);
+}
+
 .btn-submit--loading {
   opacity: 0.7;
   cursor: wait;

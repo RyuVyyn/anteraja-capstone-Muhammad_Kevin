@@ -57,6 +57,8 @@ anteraja-capstone-Muhammad_Kevin/
 ├── public/                      # Aset statis (favicon, icons)
 ├── src/
 │   ├── assets/                  # Gambar dan logo
+│   ├── context/                 # Centralized state via Context API
+│   │   └── ShipmentContext.jsx
 │   ├── data/
 │   │   └── serviceCatalog.js    # Data layanan pengiriman & filter tabs
 │   ├── features/                # Komponen fitur (feature-based structure)
@@ -73,6 +75,9 @@ anteraja-capstone-Muhammad_Kevin/
 │   │   └── service-comparison/
 │   │       └── components/
 │   │           └── ServiceComparison.jsx
+│   ├── hooks/                   # Custom hooks untuk async data fetching
+│   │   ├── useLocationData.js
+│   │   └── usePostalSearch.js
 │   ├── prototype/               # Prototype HTML/CSS/JS statis (tahap sebelumnya)
 │   │   ├── anteraja-cek-ongkir-ramah-umkm-statis.html
 │   │   ├── anteraja-cek-ongkir-ramah-umkm-statis.css
@@ -82,7 +87,7 @@ anteraja-capstone-Muhammad_Kevin/
 │   ├── shared/
 │   │   └── utils/
 │   │       └── numberFormat.js  # Utility: parseNumber(), formatRibuan()
-│   ├── App.jsx                  # Root component
+│   ├── App.jsx                  # Root component + provider orchestration
 │   ├── App.css                  # Stylesheet utama
 │   ├── index.css                # Global/reset styles
 │   └── main.jsx                 # Entry point React
@@ -91,6 +96,25 @@ anteraja-capstone-Muhammad_Kevin/
 ├── vite.config.js
 └── eslint.config.js
 ```
+
+## Arsitektur Custom Hooks & Context API
+
+Project ini kini diorganisasi berdasarkan pemisahan concern agar data fetching dan state global tidak bercampur dengan logika UI:
+
+- `useLocationData` mengambil data wilayah Indonesia dari satu API publik `emsifa` melalui `fetch`, memuat daftar provinsi serta kota sesuai provinsi yang dipilih, dan mengelola status `isLoading`, `isError`, serta `errorMessage`.
+- `ShipmentContext` menggunakan `createContext` dan `useContext` untuk menampung state utama seperti asal, tujuan, berat, dimensi, harga produk, filter layanan, dan status submit. Dengan pola ini, komponen dapat membaca dan memperbarui state tanpa `prop drilling`.
+- `App` bertindak sebagai orchestrator: ia memanggil custom hook wilayah, memetakan data API ke form suggestion, dan menjaga state kalkulasi bisnis tetap konsisten dengan PRD/FRD yang sudah dibuat.
+
+## Riwayat Branch
+
+| Branch | Deskripsi |
+|--------|-----------|
+| `main` | Branch utama |
+| `5-ui` | Desain UI dan mockup |
+| `6-db` | Skema database |
+| `6-prototype` | Prototype statis (HTML/CSS) |
+| `7-prototype` | Prototype interaktif (JavaScript) |
+| `8-react` | Integrasi React, custom hooks, async fetching, dan Context API |
 
 ## Komponen React
 

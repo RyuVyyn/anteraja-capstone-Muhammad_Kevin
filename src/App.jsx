@@ -1,24 +1,41 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef } from 'react'
 import './App.css'
+import { ShipmentProvider, useShipmentContext } from './context/ShipmentContext'
 import { filterTabs, services } from './data/serviceCatalog'
 import { ShippingForm } from './features/shipping-form/components/ShippingForm'
 import { MarginCalculator } from './features/margin-calculator/components/MarginCalculator'
 import { RecommendationEngine } from './features/recommendation-engine/components/RecommendationEngine'
 import { ServiceComparison } from './features/service-comparison/components/ServiceComparison'
+import { useLocationData } from './hooks/useLocationData'
 import { formatRibuan, parseNumber } from './shared/utils/numberFormat'
 
-function App() {
-  const [origin, setOrigin] = useState('Bandung (Coblong, 40132)')
-  const [destination, setDestination] = useState('Surabaya (Gubeng, 60281)')
-  const [weight, setWeight] = useState('5')
-  const [dimensions, setDimensions] = useState({ panjang: '30', lebar: '20', tinggi: '20' })
-  const [price, setPrice] = useState('50.000')
-  const [activeFilter, setActiveFilter] = useState('all')
-  const [selectedService, setSelectedService] = useState('ekonomi')
-  const [toast, setToast] = useState(null)
-  const [submitMessage, setSubmitMessage] = useState('')
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+function ShipmentAppContent() {
+  const {
+    origin,
+    setOrigin,
+    destination,
+    setDestination,
+    weight,
+    setWeight,
+    dimensions,
+    setDimensions,
+    price,
+    setPrice,
+    activeFilter,
+    setActiveFilter,
+    selectedService,
+    setSelectedService,
+    toast,
+    setToast,
+    submitMessage,
+    setSubmitMessage,
+    errors,
+    setErrors,
+    isSubmitting,
+    setIsSubmitting,
+  } = useShipmentContext()
+
+  const { cities, isLoading: isLocationLoading, isError: isLocationError, errorMessage: locationError } = useLocationData()
   const servicesGridRef = useRef(null)
 
   const volumeSummary = useMemo(() => {
@@ -187,6 +204,8 @@ function App() {
             volumeSummary={volumeSummary}
             submitMessage={submitMessage}
             isSubmitting={isSubmitting}
+            cities={cities}
+            locationStatus={{ isLoading: isLocationLoading, isError: isLocationError, message: locationError }}
             onOriginChange={(event) => setOrigin(event.target.value)}
             onDestinationChange={(event) => setDestination(event.target.value)}
             onWeightChange={handleWeightChange}
@@ -258,6 +277,7 @@ function App() {
                 <h3 className="footer-nav-heading">Layanan</h3>
                 <ul className="footer-nav-list">
                   <li><a href="#">Jenis Pengiriman</a></li>
+
                   <li><a href="#">Lokasi Anteraja</a></li>
                   <li><a href="#">Lacak Pengiriman</a></li>
                   <li><a href="#">Cek Ongkir</a></li>
@@ -354,4 +374,10 @@ function App() {
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <ShipmentProvider>
+      <ShipmentAppContent />
+    </ShipmentProvider>
+  )
+}

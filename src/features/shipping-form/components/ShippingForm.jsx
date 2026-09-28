@@ -8,6 +8,8 @@ export function ShippingForm({
   volumeSummary,
   submitMessage,
   isSubmitting,
+  cities = [],
+  locationStatus,
   onOriginChange,
   onDestinationChange,
   onWeightChange,
@@ -16,6 +18,8 @@ export function ShippingForm({
   onBlurField,
   onSubmit,
 }) {
+  const citySuggestions = Array.from(new Map(cities.map((city) => [city.name, city])).values())
+
   return (
     <section className="calculator-section" aria-labelledby="calculatorHeading">
       <header className="calculator-header">
@@ -35,16 +39,26 @@ export function ShippingForm({
             <label htmlFor="originInput" className="form-label">Kota Asal</label>
             <div className="input-wrapper">
               <span className="material-symbols-outlined input-icon input-icon--secondary" aria-hidden="true">trip_origin</span>
-              <input id="originInput" name="origin" className="form-input form-input--with-icon" type="text" value={origin} onChange={onOriginChange} />
+              <input id="originInput" name="origin" list="originCityOptions" className="form-input form-input--with-icon" type="text" value={origin} onChange={onOriginChange} />
             </div>
+            <datalist id="originCityOptions">
+              {citySuggestions.map((city) => (
+                <option key={city.id ?? city.name} value={`${city.name} (${city.province ?? 'Wilayah Indonesia'})`} />
+              ))}
+            </datalist>
           </div>
 
           <div className="form-group fg-col-3">
             <label htmlFor="destinationInput" className="form-label">Kota Tujuan</label>
             <div className="input-wrapper">
               <span className="material-symbols-outlined input-icon input-icon--primary" aria-hidden="true">location_on</span>
-              <input id="destinationInput" name="destination" className="form-input form-input--with-icon" type="text" value={destination} onChange={onDestinationChange} />
+              <input id="destinationInput" name="destination" list="destinationCityOptions" className="form-input form-input--with-icon" type="text" value={destination} onChange={onDestinationChange} />
             </div>
+            <datalist id="destinationCityOptions">
+              {citySuggestions.map((city) => (
+                <option key={city.id ?? `${city.name}-destination`} value={`${city.name} (${city.province ?? 'Wilayah Indonesia'})`} />
+              ))}
+            </datalist>
           </div>
 
           <div className="form-group fg-col-2">
@@ -116,3 +130,4 @@ export function ShippingForm({
     </section>
   )
 }
+
