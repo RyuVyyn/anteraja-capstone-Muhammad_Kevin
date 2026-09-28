@@ -23,12 +23,8 @@ export function ShippingForm({
           <div className="calculator-header-divider" aria-hidden="true"></div>
           <div>
             <h1 id="calculatorHeading" className="calculator-heading">Cek Tarif &amp; Estimasi Pengiriman</h1>
-            <p className="calculator-subtitle">Hitung ongkos kirim akurat berdasarkan ukuran paket dan harga barang Anda.</p>
           </div>
         </div>
-        <span className="btn-tips">
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">lightbulb</span>&nbsp;Tips Hemat Ongkir
-        </span>
       </header>
 
       <form id="shippingForm" className="form-content" onSubmit={onSubmit}>
@@ -36,7 +32,7 @@ export function ShippingForm({
           <legend className="sr-only">Formulir Cek Tarif Pengiriman</legend>
 
           <div className="form-group fg-col-3">
-            <label htmlFor="originInput" className="form-label">Kota Asal (Origin)</label>
+            <label htmlFor="originInput" className="form-label">Kota Asal</label>
             <div className="input-wrapper">
               <span className="material-symbols-outlined input-icon input-icon--secondary" aria-hidden="true">trip_origin</span>
               <input id="originInput" name="origin" className="form-input form-input--with-icon" type="text" value={origin} onChange={onOriginChange} />
@@ -44,7 +40,7 @@ export function ShippingForm({
           </div>
 
           <div className="form-group fg-col-3">
-            <label htmlFor="destinationInput" className="form-label">Kota Tujuan (Destination)</label>
+            <label htmlFor="destinationInput" className="form-label">Kota Tujuan</label>
             <div className="input-wrapper">
               <span className="material-symbols-outlined input-icon input-icon--primary" aria-hidden="true">location_on</span>
               <input id="destinationInput" name="destination" className="form-input form-input--with-icon" type="text" value={destination} onChange={onDestinationChange} />

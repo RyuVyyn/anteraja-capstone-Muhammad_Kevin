@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export function RecommendationModal({
   isOpen,
@@ -7,6 +7,7 @@ export function RecommendationModal({
   recommendedService,
   isSelected,
 }) {
+  const [isExplanationOpen, setIsExplanationOpen] = useState(true)
   useEffect(() => {
     if (!isOpen) return
 
@@ -89,13 +90,23 @@ export function RecommendationModal({
         </div>
 
         <section className="reco-explanation" aria-label="Penjelasan Nilai Rekomendasi">
-          <h4 style={{ fontSize: '13px', lineHeight: '18px', fontWeight: 700, color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center', gap: 'var(--space-2xs)', margin: 0 }}>
+          <button
+            type="button"
+            className="reco-explanation-toggle"
+            onClick={() => setIsExplanationOpen((open) => !open)}
+            aria-expanded={isExplanationOpen}
+            aria-controls="reco-explanation-panel"
+          >
             <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--color-tertiary)' }} aria-hidden="true">verified</span>
-            Kenapa layanan ini pas untuk toko Anda?
-          </h4>
-          <p>
-            Layanan <strong>{recommendedService?.name || 'Anteraja Ekonomi'}</strong> direkomendasikan agar biaya kirim tidak terlalu membebani harga barang Anda. Anda menghemat <strong>Rp 6.000 (25%)</strong> dibanding layanan standar reguler, dengan waktu sampai yang tetap wajar untuk belanja online.
-          </p>
+            <span>Kenapa layanan ini pas untuk toko Anda?</span>
+            <span className="material-symbols-outlined reco-explanation-toggle__icon" aria-hidden="true">{isExplanationOpen ? 'expand_less' : 'expand_more'}</span>
+          </button>
+
+          <div id="reco-explanation-panel" className={`reco-explanation-panel ${isExplanationOpen ? 'reco-explanation-panel--open' : ''}`}>
+            <p>
+              Layanan <strong>{recommendedService?.name || 'Anteraja Ekonomi'}</strong> direkomendasikan agar biaya kirim tidak terlalu membebani harga barang Anda. Anda menghemat <strong>Rp 6.000 (25%)</strong> dibanding layanan standar reguler, dengan waktu sampai yang tetap wajar untuk belanja online.
+            </p>
+          </div>
         </section>
 
         <div className="reco-stats">
@@ -122,7 +133,7 @@ export function RecommendationModal({
             onClick={handleSelect}
             className="btn-reco-select"
           >
-            <span>{isSelected ? 'Layanan Terpilih ✓' : 'Pilih Layanan Ini ✓'}</span>
+            <span>{isSelected ? 'Layanan Terpilih' : 'Pilih Layanan Ini'}</span>
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">check</span>
           </button>
         </footer>

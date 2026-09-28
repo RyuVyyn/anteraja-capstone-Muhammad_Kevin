@@ -162,15 +162,6 @@ function App() {
               <span className="lang-sep" aria-hidden="true">|</span>
               <span className="lang-inactive">EN</span>
             </div>
-            <a className="btn-login" href="#">Masuk</a>
-            <a className="btn-register" href="#">Daftar</a>
-            <div className="header-avatar-wrap">
-              <div className="header-avatar">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
           </div>
         </div>
       </header>
@@ -183,8 +174,6 @@ function App() {
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">calculate</span>
                 <span>Kalkulator Ongkir &amp; Estimasi Pengiriman</span>
               </li>
-              <li className="bc-sep" aria-hidden="true">/</li>
-              <li className="bc-current" aria-current="page">Bandung ke Surabaya</li>
             </ol>
           </nav>
 

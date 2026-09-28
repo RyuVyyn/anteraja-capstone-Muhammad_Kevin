@@ -18,45 +18,17 @@ export function RecommendationEngine({
 
   return (
     <>
-      <nav aria-label="Filter Layanan Pengiriman" className="filter-nav">
-        <div role="tablist" aria-label="Kategori Filter" className="filter-tabs">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.filter}
-              type="button"
-              role="tab"
-              aria-selected={activeFilter === tab.filter}
-              className={`filter-tab ${activeFilter === tab.filter ? 'filter-tab--active' : 'filter-tab--inactive'}`}
-              data-filter={tab.filter}
-              onClick={() => setActiveFilter(tab.filter)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="filter-actions">
-          <button
-            type="button"
-            className="btn-reco-link"
-            style={{ textDecoration: 'none' }}
-            onClick={() => setIsModalOpen(true)}
-            aria-haspopup="dialog"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">psychology</span>Rekomendasi Hemat
-          </button>
-        </div>
-      </nav>
-
       <section aria-label="Pilihan Layanan Pengiriman" className="services-grid">
         {visibleServices.map((service) => {
           const isSelected = selectedService === service.id
           const isDisabled = service.disabled
+          const cardToneClass = isSelected ? 'service-card--selected' : isDisabled ? 'service-card--disabled' : 'service-card--default'
+          const buttonToneClass = isSelected ? 'btn-pilih--selected' : isDisabled ? 'btn-pilih--disabled' : 'btn-pilih--secondary'
 
           return (
             <article
               key={service.id}
-              className={`service-card ${service.tones === 'primary' ? 'service-card--primary' : isDisabled ? 'service-card--disabled' : 'service-card--default'} ${isSelected ? 'service-card--selected' : ''}`}
+              className={`service-card ${cardToneClass}`}
               data-service-id={service.id}
               data-tags={service.tags.join(',')}
               data-service-name={service.name}
@@ -98,15 +70,11 @@ export function RecommendationEngine({
                       <h3 className={`card-title ${service.tones === 'disabled' ? 'card-title--disabled' : ''}`}>{service.name}</h3>
                     </div>
 
-                    {service.tones === 'primary' ? (
-                      <div className={`card-check ${isSelected ? 'card-check--selected' : 'card-check--primary'}`} aria-hidden="true">
-                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>check</span>
-                      </div>
-                    ) : service.tones === 'disabled' ? (
+                    {service.tones === 'disabled' ? (
                       <span className="material-symbols-outlined" style={{ color: 'var(--color-service-disabled)', fontSize: '20px', flexShrink: 0 }} aria-hidden="true">block</span>
                     ) : (
                       <div className={`card-check ${isSelected ? 'card-check--selected' : 'card-check--empty'}`} aria-hidden="true">
-                        <span></span>
+                        <span className="material-symbols-outlined" style={{ fontSize: '14px', display: isSelected ? 'block' : 'none' }}>check</span>
                       </div>
                     )}
                   </div>
@@ -160,8 +128,8 @@ export function RecommendationEngine({
                       }}
                       aria-haspopup="dialog"
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">lightbulb</span>
-                      Lihat Saran Rekomendasi
+                      <span>Lihat Saran Rekomendasi</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">open_in_new</span>
                     </button>
                   )}
                 </div>
@@ -169,7 +137,7 @@ export function RecommendationEngine({
                 <footer className="card-footer">
                   <button
                     type="button"
-                    className={`btn-pilih ${service.tones === 'primary' ? 'btn-pilih--primary' : service.tones === 'disabled' ? 'btn-pilih--disabled' : 'btn-pilih--secondary'} ${isSelected ? 'btn-pilih--selected' : ''}`}
+                    className={`btn-pilih ${buttonToneClass}`}
                     disabled={isDisabled}
                     onClick={(event) => {
                       event.stopPropagation()
