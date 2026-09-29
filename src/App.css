@@ -1090,6 +1090,15 @@ fieldset {
 
 .price-unit--disabled { color: var(--color-service-disabled); }
 
+.price-pending {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  color: var(--color-secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
 .price-rate {
   font-size: 10px;
   line-height: 14px;
@@ -1114,13 +1123,18 @@ fieldset {
 }
 
 .ongkir-badge--warning {
-  background-color: var(--color-error-container);
-  color: var(--color-error);
+  background-color: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
 }
 
 .ongkir-badge--danger {
   background-color: var(--color-error);
   color: var(--color-on-error);
+}
+
+.ongkir-badge--success {
+  background-color: var(--color-badge-cheapest-bg);
+  color: var(--color-badge-cheapest-text);
 }
 
 .btn-reco {

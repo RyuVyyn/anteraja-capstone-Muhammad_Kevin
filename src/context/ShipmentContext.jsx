@@ -9,7 +9,7 @@ export function ShipmentProvider({ children }) {
   const [dimensions, setDimensions] = useState({ panjang: '30', lebar: '20', tinggi: '20' })
   const [price, setPrice] = useState('50.000')
   const [activeFilter, setActiveFilter] = useState('all')
-  const [selectedService, setSelectedService] = useState('ekonomi')
+  const [selectedService, setSelectedService] = useState('')
   const [toast, setToast] = useState(null)
   const [submitMessage, setSubmitMessage] = useState('')
   const [errors, setErrors] = useState({})

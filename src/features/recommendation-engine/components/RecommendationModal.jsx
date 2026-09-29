@@ -5,9 +5,11 @@ export function RecommendationModal({
   onClose,
   onSelectService,
   recommendedService,
+  comparisonService,
+  shippingResult,
   isSelected,
 }) {
-  const [isExplanationOpen, setIsExplanationOpen] = useState(true)
+  const [isExplanationOpen, setIsExplanationOpen] = useState(false)
   useEffect(() => {
     if (!isOpen) return
 
@@ -42,6 +44,31 @@ export function RecommendationModal({
     onClose()
   }
 
+  const formatRp = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(value)}`
+  const priceDifference = comparisonService?.priceRaw != null && recommendedService?.priceRaw != null
+    ? recommendedService.priceRaw - comparisonService.priceRaw
+    : null
+  const priceDifferencePercentage = priceDifference != null && comparisonService.priceRaw > 0
+    ? Math.round((Math.abs(priceDifference) / comparisonService.priceRaw) * 100)
+    : null
+  const priceComparisonLabel = priceDifference == null
+    ? 'Tidak ada layanan pembanding yang tersedia'
+    : priceDifference > 0
+      ? `${formatRp(priceDifference)} lebih mahal dari ${comparisonService.name} (${priceDifferencePercentage}%)`
+      : priceDifference < 0
+        ? `Hemat ${formatRp(Math.abs(priceDifference))} dibanding ${comparisonService.name} (${priceDifferencePercentage}%)`
+        : `Tarif sama dengan ${comparisonService.name}`
+  const etaDifference = comparisonService?.etaDays != null && recommendedService?.etaDays != null
+    ? comparisonService.etaDays - recommendedService.etaDays
+    : null
+  const etaLabel = etaDifference == null
+    ? 'Estimasi waktu pembanding tidak tersedia'
+    : etaDifference > 0
+      ? `${Math.abs(etaDifference).toLocaleString('id-ID', { maximumFractionDigits: 1 })} hari lebih cepat dari ${comparisonService.name}`
+      : etaDifference < 0
+        ? `${Math.abs(etaDifference).toLocaleString('id-ID', { maximumFractionDigits: 1 })} hari lebih lambat dari ${comparisonService.name}`
+        : `Waktu tiba sama dengan ${comparisonService.name}`
+
   return (
     <div
       className="reco-modal-overlay"
@@ -59,10 +86,9 @@ export function RecommendationModal({
             <div>
               <div className="reco-labels">
                 <span className="reco-label-primary">REKOMENDASI ANTERAJA</span>
-                <span className="reco-label-sep" aria-hidden="true">•</span>
-                <span className="reco-label-secondary">PILIHAN PALING HEMAT</span>
               </div>
-              <h2 id="recommendationTitle" className="reco-title">Saran Pengiriman Terbaik untuk Toko Anda</h2>
+              <h2 id="recommendationTitle" className="reco-title">Saran Pengiriman Terbaik</h2>
+              {shippingResult && <p className="drawer-subtitle">Rute {shippingResult.kota_asal} ke {shippingResult.kota_tujuan}</p>}
             </div>
           </div>
           <button
@@ -77,15 +103,13 @@ export function RecommendationModal({
 
         <div className="reco-card">
           <div className="reco-card-left">
-            <span className="reco-card-category">{recommendedService?.ribbonLabel || 'Pilihan Paling Hemat'}</span>
-            <h3 className="reco-card-name">{recommendedService?.name || 'Anteraja Ekonomi'}</h3>
-            <span className="reco-card-eta">
-              {recommendedService?.eta ? `Perkiraan sampai: ${recommendedService.eta}` : 'Perkiraan sampai: 3 - 5 Hari'}
-            </span>
+            <span className="reco-card-category">Rekomendasi untuk pesanan ini</span>
+            <h3 className="reco-card-name">{recommendedService?.name}</h3>
+            <span className="reco-card-eta">Perkiraan sampai: {recommendedService?.eta}</span>
           </div>
           <div className="reco-card-right">
-            <span className="reco-card-price">{recommendedService?.price || 'Rp 18.000'}</span>
-            <span className="reco-card-badge">Porsi ongkir paling ramah kantong</span>
+            <span className="reco-card-price">{recommendedService?.price}</span>
+            <span className="reco-card-badge">Porsi ongkir {recommendedService?.persentaseOngkir}% dari harga barang</span>
           </div>
         </div>
 
@@ -104,19 +128,19 @@ export function RecommendationModal({
 
           <div id="reco-explanation-panel" className={`reco-explanation-panel ${isExplanationOpen ? 'reco-explanation-panel--open' : ''}`}>
             <p>
-              Layanan <strong>{recommendedService?.name || 'Anteraja Ekonomi'}</strong> direkomendasikan agar biaya kirim tidak terlalu membebani harga barang Anda. Anda menghemat <strong>Rp 6.000 (25%)</strong> dibanding layanan standar reguler, dengan waktu sampai yang tetap wajar untuk belanja online.
+              <strong>{recommendedService?.name}</strong> memiliki tarif {recommendedService?.price} dengan estimasi {recommendedService?.eta}. {recommendedService?.recommendationReason || priceComparisonLabel}
             </p>
           </div>
         </section>
 
         <div className="reco-stats">
           <div className="reco-stat-card">
-            <span className="reco-stat-label">Penghematan Ongkir</span>
-            <span className="reco-stat-value reco-stat-value--tertiary">Hemat Rp 6.000 (25%)</span>
+            <span className="reco-stat-label">Perbandingan Biaya</span>
+            <span className="reco-stat-value reco-stat-value--tertiary">{priceComparisonLabel}</span>
           </div>
           <div className="reco-stat-card">
             <span className="reco-stat-label">Waktu Pengiriman</span>
-            <span className="reco-stat-value reco-stat-value--on-surface">Selisih 1 - 2 Hari dibanding Reguler</span>
+            <span className="reco-stat-value reco-stat-value--on-surface">{etaLabel}</span>
           </div>
         </div>
 

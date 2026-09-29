@@ -1,13 +1,37 @@
 import { useMemo, useRef } from 'react'
 import './App.css'
 import { ShipmentProvider, useShipmentContext } from './context/ShipmentContext'
-import { filterTabs, services } from './data/serviceCatalog'
+import { filterTabs, services as fallbackServices } from './data/serviceCatalog'
 import { ShippingForm } from './features/shipping-form/components/ShippingForm'
 import { MarginCalculator } from './features/margin-calculator/components/MarginCalculator'
 import { RecommendationEngine } from './features/recommendation-engine/components/RecommendationEngine'
 import { ServiceComparison } from './features/service-comparison/components/ServiceComparison'
 import { useLocationData } from './hooks/useLocationData'
+import { useShippingCalculation } from './hooks/useShippingCalculation'
 import { formatRibuan, parseNumber } from './shared/utils/numberFormat'
+
+const parseWeight = (value) => {
+  const raw = String(value ?? '').trim()
+  if (!raw) return NaN
+
+  const decimalSeparator = raw.lastIndexOf(',') > raw.lastIndexOf('.') ? ',' : '.'
+  const normalized = raw
+    .replace(decimalSeparator === ',' ? /\./g : /,/g, '')
+    .replace(decimalSeparator, '.')
+  const parsed = Number(normalized)
+
+  return Number.isFinite(parsed) ? parsed : NaN
+}
+
+const limitWeightPrecision = (value) => {
+  const raw = String(value ?? '').replace(/[^\d.,]/g, '')
+  const separatorIndex = Math.max(raw.lastIndexOf(','), raw.lastIndexOf('.'))
+  if (separatorIndex < 0) return raw
+
+  const integer = raw.slice(0, separatorIndex).replace(/[.,]/g, '')
+  const fraction = raw.slice(separatorIndex + 1).replace(/[.,]/g, '').slice(0, 2)
+  return `${integer}${raw[separatorIndex]}${fraction}`
+}
 
 function ShipmentAppContent() {
   const {
@@ -36,13 +60,14 @@ function ShipmentAppContent() {
   } = useShipmentContext()
 
   const { cities, isLoading: isLocationLoading, isError: isLocationError, errorMessage: locationError } = useLocationData()
+  const { shippingResult, isCalculating, calcError, calculateShipping } = useShippingCalculation()
   const servicesGridRef = useRef(null)
 
   const volumeSummary = useMemo(() => {
     const panjang = parseNumber(dimensions.panjang) || 0
     const lebar = parseNumber(dimensions.lebar) || 0
     const tinggi = parseNumber(dimensions.tinggi) || 0
-    const actualWeight = parseNumber(weight) || 0
+    const actualWeight = parseWeight(weight) || 0
     const volumetricWeight = Math.round((panjang * lebar * tinggi / 6000) * 100) / 100
     const calculatedWeight = Math.max(actualWeight, volumetricWeight)
     const usingVolume = volumetricWeight > actualWeight
@@ -55,6 +80,74 @@ function ShipmentAppContent() {
     }
   }, [dimensions, weight])
 
+  // Transform API response into service card objects for the UI
+  const services = useMemo(() => {
+    const serviceIdMap = {
+      'SRV_EKO': { id: 'ekonomi', category: 'Layanan Hemat', ribbonLabel: 'PILIHAN PALING HEMAT', ribbonBadge: 'Hemat Ongkir', tones: 'primary', tags: ['cheapest', 'recommended'] },
+      'SRV_REG': { id: 'reguler', category: 'PILIHAN POPULER', ribbonLabel: '', ribbonBadge: '', tones: 'default', tags: ['regular'] },
+      'SRV_NXT': { id: 'nextday', category: 'Kilat Esok Tiba', ribbonLabel: 'PALING CEPAT', ribbonBadge: 'Besok Sampai', tones: 'default', tags: ['fastest'] },
+      'SRV_SMD': { id: 'sameday', category: 'Antar Instan 8 Jam', ribbonLabel: 'Same Day', ribbonBadge: 'Same Day', tones: 'default', tags: ['sameday'] },
+    }
+
+    if (!shippingResult) {
+      return fallbackServices.map((service) => ({
+        ...service,
+        price: '',
+        priceRaw: null,
+        tarifPerKg: null,
+        persentaseOngkir: null,
+        kategoriRisikoMargin: null,
+        pending: true,
+        disabled: false,
+        tones: service.id === 'ekonomi' ? 'primary' : 'default',
+        eta: 'Belum dihitung',
+      }))
+    }
+
+    const optionsByServiceId = new Map((shippingResult.options || []).map((option) => [option.service_id, option]))
+
+    return fallbackServices.map((service) => {
+      const serviceId = Object.keys(serviceIdMap).find((id) => serviceIdMap[id].id === service.id)
+      const option = optionsByServiceId.get(serviceId)
+
+      if (!option) {
+        return {
+          ...service,
+          price: '-',
+          priceRaw: null,
+          tarifPerKg: null,
+          persentaseOngkir: null,
+          kategoriRisikoMargin: null,
+          pending: false,
+          disabled: true,
+          tones: 'disabled',
+          eta: 'Tidak tersedia',
+          unavailableMessage: 'Layanan ini tidak tersedia untuk rute yang dipilih.',
+        }
+      }
+
+      const mapping = serviceIdMap[option.service_id]
+      return {
+        ...service,
+        ...mapping,
+        name: `Anteraja ${option.nama_layanan}`,
+        price: `Rp ${new Intl.NumberFormat('id-ID').format(option.tarif_ongkir)}`,
+        priceRaw: option.tarif_ongkir,
+        eta: option.estimasi_sla,
+        etaDays: option.estimasi_sla_hari,
+        tarifPerKg: option.tarif_per_kg,
+        persentaseOngkir: option.persentase_ongkir,
+        kategoriRisikoMargin: option.kategori_risiko_margin,
+        selisihHargaLayanan: option.selisih_harga_layanan,
+        isRecommended: option.is_recommended,
+        recommendationReason: option.alasan_rekomendasi,
+        recommendationRuleCode: option.rule_code_applied,
+        pending: false,
+        disabled: false,
+      }
+    })
+  }, [shippingResult])
+
   const visibleServices =
     activeFilter === 'all'
       ? services
@@ -66,8 +159,7 @@ function ShipmentAppContent() {
   }
 
   const handleWeightChange = (event) => {
-    const raw = event.target.value.replace(/[^\d.,]/g, '')
-    setWeight(raw)
+    setWeight(limitWeightPrecision(event.target.value))
   }
 
   const handlePriceChange = (event) => {
@@ -77,7 +169,7 @@ function ShipmentAppContent() {
   }
 
   const getNumericError = (field, value) => {
-    const numericValue = parseNumber(value)
+    const numericValue = field === 'weight' ? parseWeight(value) : parseNumber(value)
     if (Number.isNaN(numericValue) || numericValue <= 0) {
       return 'Masukkan angka yang valid'
     }
@@ -117,7 +209,7 @@ function ShipmentAppContent() {
     return nextErrors
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = collectValidationErrors()
     const isValid = Object.keys(nextErrors).length === 0
@@ -138,18 +230,36 @@ function ShipmentAppContent() {
     }
 
     setIsSubmitting(true)
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    window.setTimeout(() => {
-      setIsSubmitting(false)
-      setSubmitMessage('Tarif pengiriman berhasil diperbarui!')
+    // Kirim data ke PHP backend
+    const payload = {
+      kota_asal: origin,
+      kota_tujuan: destination,
+      berat_kg: parseWeight(weight),
+      panjang_cm: parseNumber(dimensions.panjang) || 0,
+      lebar_cm: parseNumber(dimensions.lebar) || 0,
+      tinggi_cm: parseNumber(dimensions.tinggi) || 0,
+      harga_jual: parseNumber(price),
+    }
+
+    const result = await calculateShipping(payload)
+
+    setIsSubmitting(false)
+
+    if (result?.success) {
+      setSubmitMessage('Tarif pengiriman berhasil dihitung dari server!')
+      setSelectedService('')  // Reset selection
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       servicesGridRef.current?.scrollIntoView({
         behavior: prefersReducedMotion ? 'auto' : 'smooth',
         block: 'start',
       })
 
       window.setTimeout(() => setSubmitMessage(''), 3000)
-    }, 800)
+    } else {
+      setSubmitMessage('')
+    }
   }
 
   const handleSelectService = (service) => {
@@ -215,20 +325,29 @@ function ShipmentAppContent() {
             onSubmit={handleSubmit}
           />
 
-          <MarginCalculator />
+          <MarginCalculator shippingResult={shippingResult} />
+
+          {calcError && (
+            <div className="btn-submit__error" role="alert" style={{ background: 'var(--color-error-container, #fde8e8)', color: 'var(--color-error, #c62828)', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">error</span>
+              {calcError}
+            </div>
+          )}
 
           <div ref={servicesGridRef}>
             <RecommendationEngine
               filterTabs={filterTabs}
               activeFilter={activeFilter}
               setActiveFilter={setActiveFilter}
+              allServices={services}
+              shippingResult={shippingResult}
               visibleServices={visibleServices}
               selectedService={selectedService}
               onSelectService={handleSelectService}
             />
           </div>
 
-          <ServiceComparison />
+          <ServiceComparison services={services} shippingResult={shippingResult} />
         </div>
       </main>
 

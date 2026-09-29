@@ -64,7 +64,7 @@ export function ShippingForm({
           <div className="form-group fg-col-2">
             <label htmlFor="weightInput" className="form-label">Berat Fisik</label>
             <div className="input-wrapper">
-              <input id="weightInput" name="weight" className={`form-input ${errors.weight ? 'input-error' : ''}`} type="text" aria-invalid={Boolean(errors.weight)} value={weight} onChange={onWeightChange} onBlur={onBlurField('weight')} />
+              <input id="weightInput" name="weight" className={`form-input ${errors.weight ? 'input-error' : ''}`} type="text" inputMode="decimal" aria-invalid={Boolean(errors.weight)} value={weight} onChange={onWeightChange} onBlur={onBlurField('weight')} />
             </div>
             {errors.weight && <span className="input-error-msg">{errors.weight}</span>}
           </div>
