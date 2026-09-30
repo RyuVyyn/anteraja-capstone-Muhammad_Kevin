@@ -53,7 +53,9 @@ Shipping Rate Calculator Anteraja dirancang untuk membantu pelaku UMKM menghitun
 anteraja-capstone-Muhammad_Kevin/
 ├── api/                         # Endpoint kalkulasi dan setup database SQLite
 │   ├── calculate.php
-│   └── setup_db.php
+│   ├── RecommendationEngine.php # Mesin rekomendasi BR-09 berbasis class
+│   ├── setup_db.php
+│   └── test_recommendation_engine.php # Uji aturan rekomendasi PHP
 ├── docs/                        # Dokumentasi project (PRD, FRD, Design System)
 │   ├── prd-shipping-rate-calculator.md
 │   ├── DESIGN.md
@@ -270,6 +272,14 @@ setSelectedService(service.id)
 
 Backend demo menerima input JSON melalui `POST /api/calculate.php`, menghitung berat volumetrik dan berat ditagih, mengambil tarif aktif untuk rute dari SQLite, menghitung tarif total dan rasio ongkir, mengevaluasi rekomendasi BR-09, lalu menyimpan shipment dan opsi layanan. Frontend memakai Vite proxy ke `http://localhost:8080`.
 
+Logika BR-09 berada di `api/RecommendationEngine.php`. Class `RecommendationEngine` menyimpan ambang aturan melalui properti dan constructor; method `pilih($options, $beratDitagih, $hargaJual)` mengembalikan layanan rekomendasi, kode aturan, dan alasan, atau `null` jika tidak ada pilihan yang sesuai. Loop mencari layanan termurah untuk menyusun alasan, sementara `continue` melewati opsi berisiko merah saat memeriksa apakah semua layanan berisiko merah. Prioritas keputusan BR-09 tetap Reguler, Ekonomi, Next Day, lalu default Reguler.
+
+Jalankan uji aturan rekomendasi tanpa menginisialisasi atau menghapus database:
+
+```powershell
+php api/test_recommendation_engine.php
+```
+
 Jalankan frontend dan PHP di dua terminal dari root project:
 
 ```powershell
@@ -307,6 +317,9 @@ npm run build
 
 # Jalankan linting
 npm run lint
+
+# Uji mesin rekomendasi PHP
+php api/test_recommendation_engine.php
 ```
 
 ## Riwayat Branch
