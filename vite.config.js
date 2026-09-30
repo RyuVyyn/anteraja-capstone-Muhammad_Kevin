@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Forward /api/* requests to PHP built-in server
+      // Forward /api/* requests to Laravel
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

@@ -8,7 +8,7 @@ Repository ini merupakan capstone project untuk program Anteraja NextGen AI Acad
 - [Fitur Utama](#fitur-utama)
 - [Tech Stack](#tech-stack)
 - [Struktur Folder](#struktur-folder)
-- [Backend PHP dan SQLite](#backend-php-dan-sqlite)
+- [Backend Laravel dan PostgreSQL](#backend-laravel-dan-postgresql)
 - [Perilaku Kalkulasi](#perilaku-kalkulasi)
 - [Komponen React](#komponen-react)
   - [Component Tree](#component-tree)
@@ -44,14 +44,15 @@ Shipping Rate Calculator Anteraja dirancang untuk membantu pelaku UMKM menghitun
 | Bahasa | JavaScript (JSX) |
 | Styling | Vanilla CSS (BEM methodology) |
 | Linting | ESLint + eslint-plugin-react-hooks |
-| Backend demo | PHP 8 dengan PDO |
-| Database demo | SQLite (`api/anteraja.db`) |
+| Backend | Laravel 13 (PHP 8.3+) |
+| Database | PostgreSQL (termasuk Supabase Database) |
 
 ## Struktur Folder
 
 ```
 anteraja-capstone-Muhammad_Kevin/
-├── api/                         # Endpoint kalkulasi dan setup database SQLite
+├── backend/                     # API Laravel, migrations, seeders, dan tests
+├── api/                         # Implementasi PHP lama untuk pembanding
 │   ├── calculate.php
 │   ├── RecommendationEngine.php # Mesin rekomendasi BR-09 berbasis class
 │   ├── setup_db.php
@@ -112,7 +113,7 @@ anteraja-capstone-Muhammad_Kevin/
 Project ini kini diorganisasi berdasarkan pemisahan concern agar data fetching dan state global tidak bercampur dengan logika UI:
 
 - `useLocationData` mengambil data wilayah Indonesia dari satu API publik `emsifa` melalui `fetch`, memuat daftar provinsi serta kota sesuai provinsi yang dipilih, dan mengelola status `isLoading`, `isError`, serta `errorMessage`.
-- `useShippingCalculation` mengirim input pengiriman ke `POST /api/calculate.php` dan mengelola hasil tarif serta error kalkulasi. Vite meneruskan `/api` ke server PHP pada port `8080`.
+- `useShippingCalculation` mengirim input pengiriman ke `POST /api/calculate.php` dan mengelola hasil tarif serta error kalkulasi. Vite meneruskan `/api` ke server Laravel pada port `8000`.
 - `ShipmentContext` menggunakan `createContext` dan `useContext` untuk menampung state utama seperti asal, tujuan, berat, dimensi, harga produk, filter layanan, dan status submit. Dengan pola ini, komponen dapat membaca dan memperbarui state tanpa `prop drilling`.
 - `App` memetakan opsi dari API ke empat slot layanan pada UI. Sebelum kalkulasi, kartu tidak menampilkan harga; setelah kalkulasi, opsi yang tidak tersedia ditandai sebagai tidak tersedia.
 
@@ -268,31 +269,32 @@ setSelectedService(service.id)
 | `services` | `src/data/serviceCatalog.js` | Katalog dasar untuk empat jenis kartu layanan; harga aktual berasal dari API, bukan harga fallback katalog |
 | `filterTabs` | `src/data/serviceCatalog.js` | Konfigurasi lama untuk filter; rekomendasi saat ini ditentukan BR-09, bukan tab rekomendasi |
 
-## Backend PHP dan SQLite
+## Backend Laravel dan PostgreSQL
 
-Backend demo menerima input JSON melalui `POST /api/calculate.php`, menghitung berat volumetrik dan berat ditagih, mengambil tarif aktif untuk rute dari SQLite, menghitung tarif total dan rasio ongkir, mengevaluasi rekomendasi BR-09, lalu menyimpan shipment dan opsi layanan. Frontend memakai Vite proxy ke `http://localhost:8080`.
+API aktif berada di `backend/`. Endpoint `POST /api/calculate.php` mempertahankan payload dan response JSON yang digunakan React. Laravel menerjemahkan label kota/provinsi dari form menjadi foreign key lokasi, menghitung berat, tarif, dan margin, menjalankan aturan BR-09, lalu menyimpan shipment dan opsi layanan dalam satu transaksi. Kegagalan penyimpanan mengembalikan error server.
 
-Logika BR-09 berada di `api/RecommendationEngine.php`. Class `RecommendationEngine` menyimpan ambang aturan melalui properti dan constructor; method `pilih($options, $beratDitagih, $hargaJual)` mengembalikan layanan rekomendasi, kode aturan, dan alasan, atau `null` jika tidak ada pilihan yang sesuai. Loop mencari layanan termurah untuk menyusun alasan, sementara `continue` melewati opsi berisiko merah saat memeriksa apakah semua layanan berisiko merah. Prioritas keputusan BR-09 tetap Reguler, Ekonomi, Next Day, lalu default Reguler.
+Laravel 13 memerlukan PHP 8.3 atau lebih baru dan Composer 2. Aktifkan ekstensi `pdo_pgsql` pada runtime PHP yang digunakan. Isi koneksi PostgreSQL di `backend/.env`; untuk Supabase gunakan detail koneksi database project dan jangan commit kredensial.
 
-Jalankan uji aturan rekomendasi tanpa menginisialisasi atau menghapus database:
+Inisialisasi database PostgreSQL baru dari folder `backend/`:
 
 ```powershell
-php api/test_recommendation_engine.php
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+composer install
+php artisan key:generate
+php artisan migrate --seed
 ```
 
-Jalankan frontend dan PHP di dua terminal dari root project:
+Jalankan backend dan frontend di dua terminal:
 
 ```powershell
-# Terminal 1: server PHP untuk endpoint API
-php -S localhost:8080 -t .
+# Terminal 1, dari backend/
+php artisan serve --host=127.0.0.1 --port=8000
 
-# Terminal 2: frontend Vite
+# Terminal 2, dari root repository
 npm run dev
 ```
 
-Untuk inisialisasi pertama saja, jalankan `php api/setup_db.php`. **Perhatian:** script ini menghapus dan membuat ulang `api/anteraja.db`, termasuk menghapus riwayat kalkulasi lokal. Jangan jalankan ulang jika ingin mempertahankan data; database yang sudah ada diperbarui dengan SQL secara terpisah.
-
-Schema dan data demo berada di `docs/data/schema.sql` dan `docs/data/seeder.sql`. Seed mencakup seluruh empat layanan untuk rute Bandung–Surabaya dan Jakarta–Surabaya; rute demo lain dapat memiliki cakupan layanan yang lebih sedikit.
+Migrations Laravel adalah sumber kebenaran skema. `docs/data/schema.sql`, `docs/data/seeder.sql`, dan `docs/data/erd.md` adalah referensi PostgreSQL. `api/` berisi implementasi PHP lama untuk pembanding; jangan jalankan `api/setup_db.php`, karena script itu menghapus database SQLite lama.
 
 ## Perilaku Kalkulasi
 
@@ -318,8 +320,10 @@ npm run build
 # Jalankan linting
 npm run lint
 
-# Uji mesin rekomendasi PHP
-php api/test_recommendation_engine.php
+# Uji backend Laravel
+Push-Location backend
+php artisan test
+Pop-Location
 ```
 
 ## Riwayat Branch
