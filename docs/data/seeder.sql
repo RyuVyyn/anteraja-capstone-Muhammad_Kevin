@@ -6,7 +6,7 @@
 --              berat_chargeable_kg -> berat_ditagih (istilah Glossary Bag.5)
 --   SHIPMENT_OPTIONS: tambah status_ketersediaan_rute (BR-04) &
 --                      rule_code_applied (BR-10)
--- 10 baris per tabel
+-- Tarif mencakup 90 rute berarah x 4 layanan aktif (360 baris)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -66,19 +66,51 @@ CREATE TABLE IF NOT EXISTS shipping_rates (
     estimasi_sla_hari  DECIMAL(4,1)
 );
 
-INSERT INTO shipping_rates (rate_id, kota_asal, kota_tujuan, service_id, tarif_per_kg, estimasi_sla_label, estimasi_sla_hari) VALUES
-(1, 'KOTA BANDUNG (JAWA BARAT)',       'KOTA SURABAYA (JAWA TIMUR)',    'SRV_REG', 12000.00, '1-2 Hari', 1.5),
-(2, 'KOTA BANDUNG (JAWA BARAT)',       'KOTA SURABAYA (JAWA TIMUR)',    'SRV_NXT', 18000.00, '1 Hari',   1.0),
-(3, 'KOTA BANDUNG (JAWA BARAT)',       'KOTA SURABAYA (JAWA TIMUR)',    'SRV_EKO', 9000.00,  '3-4 Hari', 3.5),
-(4, 'KOTA JAKARTA PUSAT (DKI JAKARTA)', 'KOTA SURABAYA (JAWA TIMUR)',    'SRV_EKO', 8000.00,  '3-5 Hari', 4.0),
-(5, 'KOTA JAKARTA PUSAT (DKI JAKARTA)', 'KOTA SURABAYA (JAWA TIMUR)',    'SRV_REG', 12000.00, '2-3 Hari', 2.5),
-(6, 'KOTA JAKARTA PUSAT (DKI JAKARTA)', 'KOTA SURABAYA (JAWA TIMUR)',    'SRV_SMD', 35000.00, 'Beberapa Jam', 0.3),
-(7, 'KOTA SURABAYA (JAWA TIMUR)',      'KOTA BANJARMASIN (KALIMANTAN SELATAN)', 'SRV_EKO', 9500.00,  '3-5 Hari', 4.0),
-(8, 'KOTA SURABAYA (JAWA TIMUR)',      'KOTA BANJARMASIN (KALIMANTAN SELATAN)', 'SRV_REG', 13500.00, '2-3 Hari', 2.5),
-(9, 'KOTA SEMARANG (JAWA TENGAH)',      'KOTA MAKASSAR (SULAWESI SELATAN)',    'SRV_EKO', 10500.00, '3-5 Hari', 4.5),
-(10,'KOTA DENPASAR (BALI)',      'KOTA PALEMBANG (SUMATERA SELATAN)',   'SRV_REG', 14500.00, '2-3 Hari', 3.0),
-(11, 'KOTA BANDUNG (JAWA BARAT)', 'KOTA SURABAYA (JAWA TIMUR)', 'SRV_SMD', 40000.00, 'Beberapa Jam', 0.3),
-(12, 'KOTA JAKARTA PUSAT (DKI JAKARTA)', 'KOTA SURABAYA (JAWA TIMUR)', 'SRV_NXT', 18000.00, '1 Hari', 1.0);
+DELETE FROM shipping_rates;
+
+INSERT INTO shipping_rates (rate_id, kota_asal, kota_tujuan, service_id, tarif_per_kg, estimasi_sla_label, estimasi_sla_hari)
+SELECT
+    (((asal.location_id - 1) * 9 + CASE
+        WHEN tujuan.location_id < asal.location_id THEN tujuan.location_id - 1
+        ELSE tujuan.location_id - 2
+    END) * 4)
+      + CASE layanan.service_id
+          WHEN 'SRV_EKO' THEN 1
+          WHEN 'SRV_REG' THEN 2
+          WHEN 'SRV_NXT' THEN 3
+          ELSE 4
+        END AS rate_id,
+    asal.nama_kota || ' (' || asal.provinsi || ')',
+    tujuan.nama_kota || ' (' || tujuan.provinsi || ')',
+    layanan.service_id,
+    CAST((
+        (8000 + ABS(asal.location_id - tujuan.location_id) * 750
+            + (asal.location_id + tujuan.location_id) * 125)
+        * CASE layanan.service_id
+            WHEN 'SRV_EKO' THEN 1.0
+            WHEN 'SRV_REG' THEN 1.35
+            WHEN 'SRV_NXT' THEN 1.9
+            ELSE 2.5
+          END + 50
+    ) / 100 AS INTEGER) * 100 AS tarif_per_kg,
+    CASE layanan.service_id
+        WHEN 'SRV_EKO' THEN '3-5 Hari'
+        WHEN 'SRV_REG' THEN '2-3 Hari'
+        WHEN 'SRV_NXT' THEN '1 Hari'
+        ELSE 'Beberapa Jam'
+    END AS estimasi_sla_label,
+    CASE layanan.service_id
+        WHEN 'SRV_EKO' THEN 4.0
+        WHEN 'SRV_REG' THEN 2.5
+        WHEN 'SRV_NXT' THEN 1.0
+        ELSE 0.3
+    END AS estimasi_sla_hari
+FROM locations AS asal
+CROSS JOIN locations AS tujuan
+CROSS JOIN shipping_services AS layanan
+WHERE asal.location_id <> tujuan.location_id
+  AND layanan.service_id IN ('SRV_EKO', 'SRV_REG', 'SRV_NXT', 'SRV_SMD')
+  AND layanan.is_active = TRUE;
 
 -- ---------------------------------------------------------------------
 -- 4. SHIPMENTS  (hasil form input & volumetrik — BR-01, BR-02)
