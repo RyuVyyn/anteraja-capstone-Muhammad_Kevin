@@ -58,7 +58,7 @@ class ShippingCalculationController extends Controller
         $beratDitagih = (int) ceil(max($beratKg, $beratVolume));
 
         $cacheKey = "rates:{$origin->location_id}:{$destination->location_id}";
-        $rates = Cache::remember($cacheKey, 3600, function () use ($origin, $destination): \Illuminate\Support\Collection {
+        $rates = collect(Cache::remember($cacheKey, 3600, function () use ($origin, $destination): array {
             return DB::table('shipping_rates')
                 ->join('shipping_services', 'shipping_services.service_id', '=', 'shipping_rates.service_id')
                 ->where('shipping_rates.kota_asal_id', $origin->location_id)
@@ -72,8 +72,10 @@ class ShippingCalculationController extends Controller
                     'shipping_services.service_id',
                     'shipping_services.nama_layanan',
                     'shipping_services.deskripsi',
-                ]);
-        });
+                ])
+                ->map(fn (object $row): array => (array) $row)
+                ->all();
+        }))->map(fn (array $row): object => (object) $row);
 
         $options = [];
         $tarifTermurah = null;

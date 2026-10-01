@@ -56,11 +56,13 @@ class LocationResolver
         }, $labels);
 
         /** @var \Illuminate\Support\Collection<int, object> $allLocations */
-        $allLocations = Cache::remember('locations:all', 86400, function (): \Illuminate\Support\Collection {
+        $allLocations = collect(Cache::remember('locations:all', 86400, function (): array {
             return DB::table('locations')
                 ->orderBy('location_id')
-                ->get(['location_id', 'nama_kota', 'provinsi']);
-        });
+                ->get(['location_id', 'nama_kota', 'provinsi'])
+                ->map(fn (object $row): array => (array) $row)
+                ->all();
+        }))->map(fn (array $row): object => (object) $row);
 
         return array_map(function (array $search) use ($allLocations): ?object {
             $candidates = $allLocations;
