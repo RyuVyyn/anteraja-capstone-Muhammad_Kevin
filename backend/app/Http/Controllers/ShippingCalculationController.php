@@ -6,6 +6,7 @@ use App\Services\LocationResolver;
 use App\Services\RecommendationEngine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -40,8 +41,7 @@ class ShippingCalculationController extends Controller
             return response()->json(['error' => 'Harga jual produk harus lebih dari 0.'], 422);
         }
 
-        $origin = $this->locationResolver->resolve($kotaAsal);
-        $destination = $this->locationResolver->resolve($kotaTujuan);
+        [$origin, $destination] = $this->locationResolver->resolveMany([$kotaAsal, $kotaTujuan]);
         if (! $origin || ! $destination) {
             return response()->json(['error' => 'Kota asal atau kota tujuan belum tersedia.'], 422);
         }
@@ -57,20 +57,23 @@ class ShippingCalculationController extends Controller
             : 0;
         $beratDitagih = (int) ceil(max($beratKg, $beratVolume));
 
-        $rates = DB::table('shipping_rates')
-            ->join('shipping_services', 'shipping_services.service_id', '=', 'shipping_rates.service_id')
-            ->where('shipping_rates.kota_asal_id', $origin->location_id)
-            ->where('shipping_rates.kota_tujuan_id', $destination->location_id)
-            ->where('shipping_services.is_active', true)
-            ->orderBy('shipping_rates.tarif_per_kg')
-            ->get([
-                'shipping_rates.tarif_per_kg',
-                'shipping_rates.estimasi_sla_label',
-                'shipping_rates.estimasi_sla_hari',
-                'shipping_services.service_id',
-                'shipping_services.nama_layanan',
-                'shipping_services.deskripsi',
-            ]);
+        $cacheKey = "rates:{$origin->location_id}:{$destination->location_id}";
+        $rates = Cache::remember($cacheKey, 3600, function () use ($origin, $destination): \Illuminate\Support\Collection {
+            return DB::table('shipping_rates')
+                ->join('shipping_services', 'shipping_services.service_id', '=', 'shipping_rates.service_id')
+                ->where('shipping_rates.kota_asal_id', $origin->location_id)
+                ->where('shipping_rates.kota_tujuan_id', $destination->location_id)
+                ->where('shipping_services.is_active', true)
+                ->orderBy('shipping_rates.tarif_per_kg')
+                ->get([
+                    'shipping_rates.tarif_per_kg',
+                    'shipping_rates.estimasi_sla_label',
+                    'shipping_rates.estimasi_sla_hari',
+                    'shipping_services.service_id',
+                    'shipping_services.nama_layanan',
+                    'shipping_services.deskripsi',
+                ]);
+        });
 
         $options = [];
         $tarifTermurah = null;
@@ -110,8 +113,22 @@ class ShippingCalculationController extends Controller
         unset($option);
 
         $shipmentId = 'SHP'.Str::ulid();
+        $shipmentOptions = array_map(static fn (array $option): array => [
+            'shipment_id' => $shipmentId,
+            'service_id' => $option['service_id'],
+            'tarif_ongkir' => $option['tarif_ongkir'],
+            'estimasi_sla' => $option['estimasi_sla'],
+            'status_ketersediaan_rute' => $option['status_ketersediaan_rute'],
+            'persentase_ongkir' => $option['persentase_ongkir'],
+            'kategori_risiko_margin' => $option['kategori_risiko_margin'],
+            'selisih_harga_layanan' => $option['selisih_harga_layanan'],
+            'is_recommended' => $option['is_recommended'],
+            'alasan_rekomendasi' => $option['alasan_rekomendasi'],
+            'rule_code_applied' => $option['rule_code_applied'],
+        ], $options);
+
         try {
-            DB::transaction(function () use ($shipmentId, $origin, $destination, $beratKg, $panjangCm, $lebarCm, $tinggiCm, $beratVolume, $beratDitagih, $hargaJual, $options): void {
+            DB::transaction(function () use ($shipmentId, $origin, $destination, $beratKg, $panjangCm, $lebarCm, $tinggiCm, $beratVolume, $beratDitagih, $hargaJual, $shipmentOptions): void {
                 DB::table('shipments')->insert([
                     'shipment_id' => $shipmentId,
                     'kota_asal_id' => $origin->location_id,
@@ -125,20 +142,8 @@ class ShippingCalculationController extends Controller
                     'harga_jual_produk' => $hargaJual,
                 ]);
 
-                foreach ($options as $option) {
-                    DB::table('shipment_options')->insert([
-                        'shipment_id' => $shipmentId,
-                        'service_id' => $option['service_id'],
-                        'tarif_ongkir' => $option['tarif_ongkir'],
-                        'estimasi_sla' => $option['estimasi_sla'],
-                        'status_ketersediaan_rute' => $option['status_ketersediaan_rute'],
-                        'persentase_ongkir' => $option['persentase_ongkir'],
-                        'kategori_risiko_margin' => $option['kategori_risiko_margin'],
-                        'selisih_harga_layanan' => $option['selisih_harga_layanan'],
-                        'is_recommended' => $option['is_recommended'],
-                        'alasan_rekomendasi' => $option['alasan_rekomendasi'],
-                        'rule_code_applied' => $option['rule_code_applied'],
-                    ]);
+                if ($shipmentOptions !== []) {
+                    DB::table('shipment_options')->insert($shipmentOptions);
                 }
             });
         } catch (Throwable $exception) {

@@ -1,338 +1,140 @@
-# Anteraja Capstone Project
+<div align="center">
+    <a href="https://php.net">
+        <img
+            alt="PHP"
+            src="https://www.php.net/images/logos/new-php-logo.svg"
+            width="150">
+    </a>
+</div>
 
-Repository ini merupakan capstone project untuk program Anteraja NextGen AI Academy. Fokus utama dari pengembangan ini adalah membangun fitur **Shipping Rate Calculator** — sebuah kalkulator ongkos kirim yang memungkinkan pengguna (khususnya pelaku UMKM) untuk melihat tarif pengiriman paket secara akurat, membandingkan layanan, dan mendapatkan rekomendasi pengiriman paling hemat.
+# The PHP Interpreter
 
-## Daftar Isi
+PHP is a popular general-purpose scripting language that is especially suited to
+web development. Fast, flexible and pragmatic, PHP powers everything from your
+blog to the most popular websites in the world. PHP is distributed under the
+[PHP License v3.01](LICENSE).
 
-- [Tentang Project](#tentang-project)
-- [Fitur Utama](#fitur-utama)
-- [Tech Stack](#tech-stack)
-- [Struktur Folder](#struktur-folder)
-- [Backend Laravel dan PostgreSQL](#backend-laravel-dan-postgresql)
-- [Perilaku Kalkulasi](#perilaku-kalkulasi)
-- [Komponen React](#komponen-react)
-  - [Component Tree](#component-tree)
-  - [Deskripsi Komponen](#deskripsi-komponen)
-  - [Alur Props dan State](#alur-props-dan-state)
-- [Cara Menjalankan](#cara-menjalankan)
-- [Riwayat Branch](#riwayat-branch)
+[![Push](https://github.com/php/php-src/actions/workflows/push.yml/badge.svg)](https://github.com/php/php-src/actions/workflows/push.yml)
+[![Build status](https://travis-ci.com/php/php-src.svg?branch=master)](https://travis-ci.com/github/php/php-src)
+[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/php.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:php)
 
-## Tentang Project
+## Documentation
 
-Shipping Rate Calculator Anteraja dirancang untuk membantu pelaku UMKM menghitung ongkos kirim berdasarkan berat fisik, volume paket, dan harga barang. Aplikasi ini juga menyediakan rekomendasi layanan pengiriman yang paling efisien dari sisi biaya, sehingga penjual dapat mengambil keputusan yang tepat sebelum mengirim barang.
+The PHP manual is available at [php.net/docs](https://php.net/docs).
 
-## Fitur Utama
+## Installation
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Cek Tarif & Estimasi** | Form input kota asal/tujuan, berat, dimensi, dan harga produk dengan validasi real-time |
-| **Kalkulasi Berat Volume** | Menghitung berat volumetrik `(P×L×T/6000)` dan berat ditagih dengan pembulatan ke atas |
-| **Berat Fisik Desimal** | Menerima titik atau koma desimal, maksimal dua angka pecahan sesuai `DECIMAL(6,2)` |
-| **Format Angka Otomatis** | Input harga produk secara otomatis diformat dengan pemisah ribuan (contoh: `50.000`) |
-| **Service Cards** | Harga tampil setelah kalkulasi; menandai rekomendasi BR-09, tarif termurah, SLA tercepat, dan layanan yang tidak tersedia |
-| **Simulasi Margin** | Menghitung rasio ongkir terhadap harga produk dari hasil API; tanpa angka contoh sebelum kalkulasi |
-| **Rekomendasi BR-09** | Memilih layanan dengan aturan bisnis dan menampilkan alasan dalam bahasa sederhana |
-| **Perbandingan Layanan** | Tabel tarif, margin, dan SLA berdasarkan rute; layanan yang tidak tersedia ditampilkan sebagai `-` |
-| **Toast Notification** | Feedback visual saat memilih layanan pengiriman |
+### Prebuilt packages and binaries
 
-## Tech Stack
+Prebuilt packages and binaries can be used to get up and running fast with PHP.
 
-| Kategori | Teknologi |
-|----------|-----------|
-| Framework | React 19 |
-| Build Tool | Vite 8 |
-| Bahasa | JavaScript (JSX) |
-| Styling | Vanilla CSS (BEM methodology) |
-| Linting | ESLint + eslint-plugin-react-hooks |
-| Backend | Laravel 13 (PHP 8.3+) |
-| Database | PostgreSQL (termasuk Supabase Database) |
+For Windows, the PHP binaries can be obtained from
+[windows.php.net](https://windows.php.net). After extracting the archive the
+`*.exe` files are ready to use.
 
-## Struktur Folder
+For other systems, see the [installation chapter](https://php.net/install).
 
-```
-anteraja-capstone-Muhammad_Kevin/
-├── backend/                     # API Laravel, migrations, seeders, dan tests
-├── api/                         # Implementasi PHP lama untuk pembanding
-│   ├── calculate.php
-│   ├── RecommendationEngine.php # Mesin rekomendasi BR-09 berbasis class
-│   ├── setup_db.php
-│   └── test_recommendation_engine.php # Uji aturan rekomendasi PHP
-├── docs/                        # Dokumentasi project (PRD, FRD, Design System)
-│   ├── prd-shipping-rate-calculator.md
-│   ├── DESIGN.md
-│   ├── dokumentasi-kesesuaian-ui-frd.md
-│   ├── frd/
-│   └── data/                     # schema.sql, seeder.sql, dan dataset demo
-│       └── shipping_rate_calculator_dummy_dataset.csv
-├── public/                      # Aset statis (favicon, icons)
-├── src/
-│   ├── assets/                  # Gambar dan logo
-│   ├── context/                 # Centralized state via Context API
-│   │   └── ShipmentContext.jsx
-│   ├── data/
-│   │   └── serviceCatalog.js    # Data layanan pengiriman & filter tabs
-│   ├── features/                # Komponen fitur (feature-based structure)
-│   │   ├── shipping-form/
-│   │   │   └── components/
-│   │   │       └── ShippingForm.jsx
-│   │   ├── margin-calculator/
-│   │   │   └── components/
-│   │   │       └── MarginCalculator.jsx
-│   │   ├── recommendation-engine/
-│   │   │   └── components/
-│   │   │       ├── RecommendationEngine.jsx
-│   │   │       └── RecommendationModal.jsx
-│   │   └── service-comparison/
-│   │       └── components/
-│   │           └── ServiceComparison.jsx
-│   ├── hooks/                   # Custom hooks untuk async data fetching
-│   │   ├── useLocationData.js
-│   │   ├── useShippingCalculation.js
-│   │   └── usePostalSearch.js
-│   ├── prototype/               # Prototype HTML/CSS/JS statis (tahap sebelumnya)
-│   │   ├── anteraja-cek-ongkir-ramah-umkm-statis.html
-│   │   ├── anteraja-cek-ongkir-ramah-umkm-statis.css
-│   │   ├── anteraja-recommendation-section-statis.html
-│   │   ├── js/app.js
-│   │   └── DOKUMENTASI-INTERAKSI-JS.md
-│   ├── shared/
-│   │   └── utils/
-│   │       └── numberFormat.js  # Utility: parseNumber(), formatRibuan()
-│   ├── App.jsx                  # Root component + provider orchestration
-│   ├── App.css                  # Stylesheet utama
-│   ├── index.css                # Global/reset styles
-│   └── main.jsx                 # Entry point React
-├── index.html                   # HTML shell untuk Vite
-├── package.json
-├── vite.config.js
-└── eslint.config.js
-```
+### Building PHP source code
 
-## Arsitektur Custom Hooks & Context API
+*For Windows, see [Build your own PHP on Windows](https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2).*
 
-Project ini kini diorganisasi berdasarkan pemisahan concern agar data fetching dan state global tidak bercampur dengan logika UI:
+For a minimal PHP build from Git, you will need autoconf, bison, and re2c. For
+a default build, you will additionally need libxml2 and libsqlite3.
 
-- `useLocationData` mengambil data wilayah Indonesia dari satu API publik `emsifa` melalui `fetch`, memuat daftar provinsi serta kota sesuai provinsi yang dipilih, dan mengelola status `isLoading`, `isError`, serta `errorMessage`.
-- `useShippingCalculation` mengirim input pengiriman ke `POST /api/calculate.php` dan mengelola hasil tarif serta error kalkulasi. Vite meneruskan `/api` ke server Laravel pada port `8000`.
-- `ShipmentContext` menggunakan `createContext` dan `useContext` untuk menampung state utama seperti asal, tujuan, berat, dimensi, harga produk, filter layanan, dan status submit. Dengan pola ini, komponen dapat membaca dan memperbarui state tanpa `prop drilling`.
-- `App` memetakan opsi dari API ke empat slot layanan pada UI. Sebelum kalkulasi, kartu tidak menampilkan harga; setelah kalkulasi, opsi yang tidak tersedia ditandai sebagai tidak tersedia.
+On Ubuntu, you can install these using:
 
-## Riwayat Branch
+    sudo apt install -y pkg-config build-essential autoconf bison re2c \
+                        libxml2-dev libsqlite3-dev
 
-| Branch | Deskripsi |
-|--------|-----------|
-| `main` | Branch utama |
-| `5-ui` | Desain UI dan mockup |
-| `6-db` | Skema database |
-| `6-prototype` | Prototype statis (HTML/CSS) |
-| `7-prototype` | Prototype interaktif (JavaScript) |
-| `8-react` | Integrasi React, custom hooks, async fetching, dan Context API |
+On Fedora, you can install these using:
 
-## Komponen React
+    sudo dnf install re2c bison autoconf make libtool ccache libxml2-devel sqlite-devel
 
-### Component Tree
+Generate configure:
 
-Berikut adalah hierarki komponen React yang digunakan dalam aplikasi:
+    ./buildconf
 
-```
-App                                    ← Root component, mengelola seluruh state
-├── <header>                           ← Header statis (logo, navigasi, login)
-├── <main>
-│   ├── ShippingForm                   ← Form input pengiriman + validasi
-│   ├── MarginCalculator               ← Simulasi margin dari hasil API
-│   ├── RecommendationEngine           ← Kartu layanan, badge harga/SLA, rekomendasi BR-09
-│   │   └── RecommendationModal        ← Modal popup rekomendasi hemat
-│   └── ServiceComparison              ← Tabel tarif, margin, dan SLA per rute
-├── <footer>                           ← Footer statis (kontak, navigasi, sosmed)
-└── Toast Notification                 ← Conditional: muncul saat layanan dipilih
-```
+Configure your build. `--enable-debug` is recommended for development, see
+`./configure --help` for a full list of options.
 
-### Deskripsi Komponen
+    # For development
+    ./configure --enable-debug
+    # For production
+    ./configure
 
-| Komponen | Tipe | File | Deskripsi |
-|----------|------|------|-----------|
-| **App** | Stateful | `src/App.jsx` | Root component yang mengelola seluruh state aplikasi dan meneruskan data ke child components via props |
-| **ShippingForm** | Stateless (Controlled) | `src/features/shipping-form/components/ShippingForm.jsx` | Form input kota asal/tujuan, berat, dimensi, dan harga. Semua input dikontrol lewat props dari App |
-| **MarginCalculator** | Stateful | `src/features/margin-calculator/components/MarginCalculator.jsx` | Menampilkan ringkasan dan tips berbasis hasil kalkulasi; accordion tertutup secara default |
-| **RecommendationEngine** | Stateful (Local) | `src/features/recommendation-engine/components/RecommendationEngine.jsx` | Menampilkan kartu layanan dan rekomendasi BR-09. Memiliki local state `isModalOpen` |
-| **RecommendationModal** | Stateful | `src/features/recommendation-engine/components/RecommendationModal.jsx` | Menampilkan alasan dan perbandingan harga/SLA terhadap layanan pembanding yang relevan |
-| **ServiceComparison** | Stateless (API-driven) | `src/features/service-comparison/components/ServiceComparison.jsx` | Membandingkan tarif, rasio ongkir, ketersediaan, dan SLA; penanda termurah/tercepat mengikuti hasil API |
+Build PHP. To speed up the build, specify the maximum number of jobs using `-j`:
 
-### Alur Props dan State
+    make -j4
 
-#### State yang Dikelola di `App`
+The number of jobs should usually match the number of available cores, which
+can be determined using `nproc`.
 
-Seluruh state utama dikelola secara terpusat di komponen `App` mengikuti pola **Unidirectional Data Flow** (data mengalir satu arah dari parent ke child):
+## Testing PHP source code
 
-| State | Tipe Data | Nilai Awal | Kegunaan |
-|-------|-----------|------------|----------|
-| `origin` | `string` | `''` | Kota asal pengiriman |
-| `destination` | `string` | `''` | Kota tujuan pengiriman |
-| `weight` | `string` | `'5'` | Berat fisik paket (kg) |
-| `dimensions` | `object` | `{ panjang: '30', lebar: '20', tinggi: '20' }` | Dimensi paket (cm) |
-| `price` | `string` | `'50.000'` | Harga produk (Rupiah, terformat) |
-| `activeFilter` | `string` | `'all'` | Tab filter layanan yang aktif |
-| `selectedService` | `string` | `''` | Tidak ada layanan yang aktif sebelum dipilih user |
-| `toast` | `object \| null` | `null` | Data toast notification (name, price, eta) |
-| `submitMessage` | `string` | `''` | Pesan sukses setelah submit form |
-| `errors` | `object` | `{}` | Kumpulan pesan error validasi per field |
-| `isSubmitting` | `boolean` | `false` | Status loading saat proses submit |
+PHP ships with an extensive test suite, the command `make test` is used after
+successful compilation of the sources to run this test suite.
 
-Selain state, `App` juga menggunakan:
-- **`useMemo`** untuk `volumeSummary` — menghitung berat volumetrik hanya ketika `dimensions` atau `weight` berubah
-- **`useRef`** untuk `servicesGridRef` — referensi DOM untuk scroll otomatis ke hasil layanan
+It is possible to run tests using multiple cores by setting `-jN` in
+`TEST_PHP_ARGS`:
 
-#### State Lokal di `RecommendationEngine`
+    make TEST_PHP_ARGS=-j4 test
 
-| State | Tipe Data | Nilai Awal | Kegunaan |
-|-------|-----------|------------|----------|
-| `isModalOpen` | `boolean` | `false` | Mengontrol visibilitas RecommendationModal |
+Shall run `make test` with a maximum of 4 concurrent jobs: Generally the maximum
+number of jobs should not exceed the number of cores available.
 
-#### Diagram Alur Props
+The [qa.php.net](https://qa.php.net) site provides more detailed info about
+testing and quality assurance.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                            App (State Owner)                        │
-│                                                                     │
-│  State: origin, destination, weight, dimensions, price,             │
-│         activeFilter, selectedService, toast, submitMessage,        │
-│         errors, isSubmitting                                        │
-│  Derived: volumeSummary (useMemo), visibleServices (filter)         │
-└──────┬──────────────┬─────────────────┬────────────────┬────────────┘
-       │              │                 │                │
-       ▼              ▼                 ▼                ▼
- ┌───────────┐ ┌──────────────┐ ┌──────────────────┐ ┌──────────────┐
- │ShippingForm│ │MarginCalc.   │ │RecommendationEng.│ │ServiceComp.  │
- │            │ │(tanpa props) │ │                  │ │(tanpa props) │
- │ Props:     │ └──────────────┘ │ Props:           │ └──────────────┘
- │ • origin   │                  │ • filterTabs     │
- │ • dest.    │                  │ • activeFilter   │
- │ • weight   │                  │ • setActiveFilter │
- │ • dimens.  │                  │ • visibleServices│
- │ • price    │                  │ • selectedService│
- │ • errors   │                  │ • onSelectService│
- │ • volumeS. │                  │                  │
- │ • submitM. │                  │ Local State:     │
- │ • isSubm.  │                  │ • isModalOpen    │
- │            │                  │        │         │
- │ Callbacks: │                  │        ▼         │
- │ • onChange │                  │ ┌──────────────┐ │
- │ • onBlur   │                  │ │Recomm.Modal  │ │
- │ • onSubmit │                  │ │              │ │
- └───────────┘                  │ │ Props:       │ │
-                                 │ │ • isOpen     │ │
-       ▲ Events naik ke App      │ │ • onClose    │ │
-       │ via callback props      │ │ • onSelectS. │ │
-       │                         │ │ • recomm.S.  │ │
-       │  contoh:                │ │ • isSelected │ │
-       │  onWeightChange(e)      │ └──────────────┘ │
-       │  → setWeight(raw)       └──────────────────┘
-       │
-       │  onSelectService(svc)
-       │  → setSelectedService(svc.id)
-       │  → setToast({...})
-```
+## Installing PHP built from source
 
-#### Pola Update State (Immutable)
+After a successful build (and test), PHP may be installed with:
 
-Semua update state dilakukan secara **immutable** (tanpa mutasi langsung):
+    make install
 
-```jsx
-// ✅ Spread operator untuk update objek
-setDimensions((current) => ({ ...current, [field]: raw }))
+Depending on your permissions and prefix, `make install` may need super user
+permissions.
 
-// ✅ Functional updater untuk update berdasarkan state sebelumnya
-setErrors((current) => {
-  const next = { ...current }
-  if (message) next[field] = message
-  else delete next[field]
-  return next
-})
+## PHP extensions
 
-// ✅ Replace penuh untuk tipe primitif
-setWeight(raw)
-setActiveFilter(tab.filter)
-setSelectedService(service.id)
-```
+Extensions provide additional functionality on top of PHP. PHP consists of many
+essential bundled extensions. Additional extensions can be found in the PHP
+Extension Community Library - [PECL](https://pecl.php.net).
 
-### Shared Utilities
+## Contributing
 
-| Fungsi | File | Deskripsi |
-|--------|------|-----------|
-| `parseNumber(value)` | `src/shared/utils/numberFormat.js` | Mengubah string berformat Indonesia (`50.000`) menjadi angka JavaScript (`50000`) |
-| `formatRibuan(value)` | `src/shared/utils/numberFormat.js` | Memformat angka menjadi string dengan pemisah ribuan Indonesia (`50.000`) |
+The PHP source code is located in the Git repository at
+[github.com/php/php-src](https://github.com/php/php-src). Contributions are most
+welcome by forking the repository and sending a pull request.
 
-### Data Layer
+Discussions are done on GitHub, but depending on the topic can also be relayed
+to the official PHP developer mailing list internals@lists.php.net.
 
-| Ekspor | File | Deskripsi |
-|--------|------|-----------|
-| `services` | `src/data/serviceCatalog.js` | Katalog dasar untuk empat jenis kartu layanan; harga aktual berasal dari API, bukan harga fallback katalog |
-| `filterTabs` | `src/data/serviceCatalog.js` | Konfigurasi lama untuk filter; rekomendasi saat ini ditentukan BR-09, bukan tab rekomendasi |
+New features require an RFC and must be accepted by the developers. See
+[Request for comments - RFC](https://wiki.php.net/rfc) and
+[Voting on PHP features](https://wiki.php.net/rfc/voting) for more information
+on the process.
 
-## Backend Laravel dan PostgreSQL
+Bug fixes don't require an RFC. If the bug has a GitHub issue, reference it in
+the commit message using `GH-NNNNNN`. Use `#NNNNNN` for tickets in the old
+[bugs.php.net](https://bugs.php.net) bug tracker.
 
-API aktif berada di `backend/`. Endpoint `POST /api/calculate.php` mempertahankan payload dan response JSON yang digunakan React. Laravel menerjemahkan label kota/provinsi dari form menjadi foreign key lokasi, menghitung berat, tarif, dan margin, menjalankan aturan BR-09, lalu menyimpan shipment dan opsi layanan dalam satu transaksi. Kegagalan penyimpanan mengembalikan error server.
+    Fix GH-7815: php_uname doesn't recognise latest Windows versions
+    Fix #55371: get_magic_quotes_gpc() throws deprecation warning
 
-Laravel 13 memerlukan PHP 8.3 atau lebih baru dan Composer 2. Aktifkan ekstensi `pdo_pgsql` pada runtime PHP yang digunakan. Isi koneksi PostgreSQL di `backend/.env`; untuk Supabase gunakan detail koneksi database project dan jangan commit kredensial.
+See [Git workflow](https://wiki.php.net/vcs/gitworkflow) for details on how pull
+requests are merged.
 
-Inisialisasi database PostgreSQL baru dari folder `backend/`:
+### Guidelines for contributors
 
-```powershell
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-composer install
-php artisan key:generate
-php artisan migrate --seed
-```
+See further documents in the repository for more information on how to
+contribute:
 
-Jalankan backend dan frontend di dua terminal:
+- [Contributing to PHP](/CONTRIBUTING.md)
+- [PHP coding standards](/CODING_STANDARDS.md)
+- [Mailing list rules](/docs/mailinglist-rules.md)
+- [PHP release process](/docs/release-process.md)
 
-```powershell
-# Terminal 1, dari backend/
-php artisan serve --host=127.0.0.1 --port=8000
+## Credits
 
-# Terminal 2, dari root repository
-npm run dev
-```
-
-Migrations Laravel adalah sumber kebenaran skema. `docs/data/schema.sql`, `docs/data/seeder.sql`, dan `docs/data/erd.md` adalah referensi PostgreSQL. `api/` berisi implementasi PHP lama untuk pembanding; jangan jalankan `api/setup_db.php`, karena script itu menghapus database SQLite lama.
-
-## Perilaku Kalkulasi
-
-- Berat fisik menerima titik atau koma desimal sampai dua angka pecahan. Berat volumetrik adalah `(P × L × T) / 6000`; berat ditagih adalah nilai terbesar yang dibulatkan ke atas per 1 kg.
-- Tarif per layanan dihitung dari tarif per kg dikali berat ditagih. Margin menggunakan `(tarif ongkir / harga jual) × 100%`, dengan ambang hijau `≤15%`, kuning `>15% sampai 30%`, dan merah `>30%`.
-- Rekomendasi mengikuti urutan BR-09: Reguler jika marginnya `≤30%` dan delta harga `≤Rp10.000`; jika tidak, Ekonomi jika semua opsi berisiko merah atau berat ditagih `>5 kg`; jika tidak, Next Day jika harga produk `>Rp1.000.000` dan marginnya `≤10%`; selain itu Reguler sebagai default. Aturan hanya memilih layanan yang tersedia untuk rute.
-- Kartu menampilkan rekomendasi BR-09, tarif termurah, dan SLA tercepat sebagai penanda terpisah. Popup membandingkan rekomendasi Reguler dengan opsi termurah lain; rekomendasi selain Reguler dibandingkan dengan Reguler jika tersedia.
-- Tabel perbandingan dan simulasi margin menggunakan hasil API. Sebelum kalkulasi tidak ada angka rute contoh yang ditampilkan; layanan yang tidak tersedia ditandai `-`.
-- Batas waktu pickup dan dukungan COD pada tabel masih berupa informasi demo statis karena belum tersedia pada schema tarif/API.
-
-## Cara Menjalankan
-
-```bash
-# Install dependencies
-npm install
-
-# Jalankan development server
-npm run dev
-
-# Build untuk production
-npm run build
-
-# Jalankan linting
-npm run lint
-
-# Uji backend Laravel
-Push-Location backend
-php artisan test
-Pop-Location
-```
-
-## Riwayat Branch
-
-| Branch | Deskripsi |
-|--------|-----------|
-| `main` | Branch utama |
-| `5-ui` | Desain UI dan mockup |
-| `6-db` | Skema database |
-| `6-prototype` | Prototype statis (HTML/CSS) |
-| `7-prototype` | Prototype interaktif (JavaScript) |
-| `8-react` | Migrasi ke komponen React (branch ini) |
+For the list of people who've put work into PHP, please see the
+[PHP credits page](https://php.net/credits.php).

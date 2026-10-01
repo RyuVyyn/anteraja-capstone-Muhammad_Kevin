@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -9,22 +11,70 @@ class LocationResolver
 {
     public function resolve(string $label): ?object
     {
-        if (preg_match('/^(.+?)\s*\(([^()]*)\)$/u', trim($label), $matches)) {
-            $cityName = $matches[1];
-            $provinceName = Str::upper(trim($matches[2]));
-            $locations = DB::table('locations')
-                ->whereRaw('UPPER(TRIM(provinsi)) = ?', [$provinceName])
-                ->get(['location_id', 'nama_kota', 'provinsi']);
-        } else {
-            $cityName = $label;
-            $locations = DB::table('locations')->get(['location_id', 'nama_kota', 'provinsi']);
+        return $this->resolveMany([$label])[0] ?? null;
+    }
+
+    /**
+     * @param  list<string>  $labels
+     * @return list<?object>
+     */
+    public function resolveMany(array $labels): array
+    {
+        if ($labels === []) {
+            return [];
         }
 
-        $normalizedCity = $this->normalizeCity($cityName);
+        $searches = array_map(function (string $label): array {
+            $provinceName = null;
+            if (preg_match('/^(.+?)\s*\(([^()]*)\)$/u', trim($label), $matches)) {
+                $cityName = $matches[1];
+                $provinceName = Str::upper(trim($matches[2]));
+            } else {
+                $cityName = $label;
+            }
 
-        return $locations->first(
-            fn (object $location): bool => $this->normalizeCity($location->nama_kota) === $normalizedCity,
-        );
+            $normalizedCity = $this->normalizeCity($cityName);
+            $prefixes = [
+                '',
+                'KOTA ADMINISTRASI ',
+                'KOTA ADM ',
+                'KOTA ADM. ',
+                'KOTA ',
+                'KABUPATEN ',
+                'KAB ',
+                'KAB. ',
+            ];
+
+            return [
+                'normalized_city' => $normalizedCity,
+                'province_name' => $provinceName,
+                'city_names' => array_map(
+                    static fn (string $prefix): string => $prefix.$normalizedCity,
+                    $prefixes,
+                ),
+            ];
+        }, $labels);
+
+        /** @var \Illuminate\Support\Collection<int, object> $allLocations */
+        $allLocations = Cache::remember('locations:all', 86400, function (): \Illuminate\Support\Collection {
+            return DB::table('locations')
+                ->orderBy('location_id')
+                ->get(['location_id', 'nama_kota', 'provinsi']);
+        });
+
+        return array_map(function (array $search) use ($allLocations): ?object {
+            $candidates = $allLocations;
+
+            if ($search['province_name'] !== null) {
+                $candidates = $candidates->filter(
+                    fn (object $location): bool => Str::upper(trim($location->provinsi)) === $search['province_name'],
+                );
+            }
+
+            return $candidates->first(
+                fn (object $location): bool => $this->normalizeCity($location->nama_kota) === $search['normalized_city'],
+            );
+        }, $searches);
     }
 
     private function normalizeCity(string $cityName): string

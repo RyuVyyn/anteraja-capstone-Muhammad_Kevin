@@ -42,6 +42,26 @@ class ShippingCalculationTest extends TestCase
         $this->assertDatabaseCount('shipment_options', 4);
     }
 
+    public function test_it_resolves_city_aliases_without_province_labels(): void
+    {
+        $this->seed();
+
+        $this->postJson('/api/calculate.php', [
+            'kota_asal' => 'Jakarta Pusat',
+            'kota_tujuan' => 'KOTA Surabaya',
+            'berat_kg' => 1,
+            'harga_jual' => 100000,
+        ])
+            ->assertOk()
+            ->assertJsonPath('kota_asal', 'Jakarta Pusat')
+            ->assertJsonPath('kota_tujuan', 'KOTA Surabaya');
+
+        $this->assertDatabaseHas('shipments', [
+            'kota_asal_id' => 1,
+            'kota_tujuan_id' => 2,
+        ]);
+    }
+
     public function test_it_rejects_empty_json_with_the_legacy_error_shape(): void
     {
         $this->postJson('/api/calculate.php', [])
