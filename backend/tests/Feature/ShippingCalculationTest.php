@@ -103,7 +103,7 @@ class ShippingCalculationTest extends TestCase
         $this->assertDatabaseCount('shipment_options', 0);
     }
 
-    public function test_it_rolls_back_the_shipment_when_an_option_cannot_be_saved(): void
+    public function test_it_still_returns_success_when_async_logging_fails(): void
     {
         $this->seed();
         DB::statement("CREATE TRIGGER reject_options BEFORE INSERT ON shipment_options BEGIN SELECT RAISE(ABORT, 'forced failure'); END");
@@ -114,9 +114,10 @@ class ShippingCalculationTest extends TestCase
             'berat_kg' => 1,
             'harga_jual' => 100000,
         ])
-            ->assertStatus(500)
-            ->assertJsonPath('error', 'Gagal menyimpan data kalkulasi.');
+            ->assertOk()
+            ->assertJsonPath('success', true);
 
+        // afterResponse() INSERT gagal → shipment di-rollback, tapi response tetap 200
         $this->assertDatabaseCount('shipments', 0);
         $this->assertDatabaseCount('shipment_options', 0);
     }

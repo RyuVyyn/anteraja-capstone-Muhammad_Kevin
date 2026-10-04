@@ -15,6 +15,7 @@ Repository ini merupakan capstone project untuk program Anteraja NextGen AI Acad
   - [Alur Props dan State](#alur-props-dan-state)
 - [Backend Laravel dan PostgreSQL](#backend-laravel-dan-postgresql)
 - [Optimasi Performa API & Redis Caching](#optimasi-performa-api--redis-caching)
+- [Eloquent, Async Logging, & API Riwayat Simulasi](#eloquent-async-logging--api-riwayat-simulasi)
 - [Perilaku Kalkulasi](#perilaku-kalkulasi)
 - [Cara Menjalankan](#cara-menjalankan)
 - [Riwayat Branch](#riwayat-branch)
@@ -263,7 +264,7 @@ setSelectedService(service.id)
 
 ## Backend Laravel dan PostgreSQL
 
-API aktif berada di `backend/`. Endpoint `POST /api/calculate.php` mempertahankan payload dan response JSON yang digunakan React. Laravel menerjemahkan label kota/provinsi dari form menjadi foreign key lokasi, menghitung berat, tarif, dan margin, menjalankan aturan BR-09, lalu menyimpan shipment dan opsi layanan dalam satu transaksi. Kegagalan penyimpanan mengembalikan error server.
+API aktif berada di `backend/`. Endpoint `POST /api/calculate.php` mempertahankan payload dan response JSON yang digunakan React. Laravel menerjemahkan label kota/provinsi dari form menjadi foreign key lokasi menggunakan **Eloquent Model** (`ShippingRate`, `ShippingService`, `Location`, `Shipment`, `ShipmentOption`), menghitung berat, tarif, dan margin, menjalankan aturan BR-09, lalu **menyimpan riwayat secara asinkron** setelah response JSON terkirim menggunakan `dispatch()->afterResponse()`.
 
 Laravel 13 memerlukan PHP 8.3 atau lebih baru dan Composer 2. Aktifkan ekstensi `pdo_pgsql` pada runtime PHP yang digunakan. Isi koneksi PostgreSQL di `backend/.env`; untuk Supabase gunakan detail koneksi database project dan jangan commit kredensial.
 
@@ -346,8 +347,67 @@ Sebelum optimasi, pengujian benchmark 5 pemanggilan sekuensial menghasilkan wakt
 | **Database Queries (Hit)** | Multiple SELECT + Loop INSERT | **0 SELECT (cached)** + 1 bulk INSERT | Mengurangi beban koneksi Supabase |
 
 > [!NOTE]
-> Latensi pada warm hit (~500–560 ms) saat ini murni didominasi oleh transaksi penulisan riwayat (`shipments` & `shipment_options`) ke database remote Supabase di region `ap-southeast-1` (Singapura). Untuk mencapai latensi sub-200ms pada tahap selanjutnya, penyimpanan riwayat transaksi dapat dialihkan ke background queue worker (asynchronous) atau dengan menempatkan database co-located dengan application server.
+> Latensi pada warm hit sebelumnya (~500–560 ms) didominasi oleh transaksi penulisan riwayat ke Supabase. Masalah ini telah diatasi dengan `dispatch()->afterResponse()` — response JSON dikirim ke React **terlebih dahulu**, lalu INSERT berjalan setelahnya di proses PHP yang sama. Lihat bagian [Eloquent, Async Logging, & API Riwayat Simulasi](#eloquent-async-logging--api-riwayat-simulasi) untuk detail.
 
+
+## Eloquent, Async Logging, & API Riwayat Simulasi
+
+### 1. Migrasi ke Eloquent ORM
+
+Seluruh akses data pada `ShippingCalculationController` direfaktor dari `DB::table()` (Query Builder) ke **Eloquent Model** dengan relasi:
+
+| Model | Tabel | Relasi |
+|---|---|---|
+| `Location` | `locations` | — |
+| `ShippingService` | `shipping_services` | `hasMany(ShippingRate)` |
+| `ShippingRate` | `shipping_rates` | `belongsTo(ShippingService)`, `belongsTo(Location)` × 2 |
+| `Shipment` | `shipments` | `hasMany(ShipmentOption)`, `belongsTo(Location)` × 2 |
+| `ShipmentOption` | `shipment_options` | `belongsTo(Shipment)`, `belongsTo(ShippingService)` |
+
+Query tarif kini menggunakan **Eager Loading** (`ShippingRate::with('service')`) untuk menghindari N+1 query.
+
+### 2. Invalidasi Cache Otomatis (`ShippingRateObserver`)
+
+`ShippingRateObserver` terdaftar di `AppServiceProvider::boot()`. Setiap kali data tarif di-create, update, atau delete melalui Eloquent, cache Redis rute terkait (`rates:{asal_id}:{tujuan_id}`) secara otomatis dihapus via `Cache::forget()`, memastikan kalkulasi berikutnya mengambil data fresh.
+
+### 3. Pencatatan Riwayat Asinkron (`afterResponse`)
+
+Penyimpanan riwayat simulasi (`shipments` + `shipment_options`) kini dijalankan **setelah response JSON terkirim** ke React menggunakan:
+
+```php
+dispatch(function () use ($catat, $shipmentOptions): void {
+    DB::transaction(function () use ($catat, $shipmentOptions): void {
+        Shipment::create($catat);
+        if ($shipmentOptions !== []) {
+            ShipmentOption::insert($shipmentOptions);
+        }
+    });
+})->afterResponse();
+```
+
+Penjual tidak perlu menunggu proses INSERT ke Supabase — response langsung dikembalikan. Kegagalan INSERT di-log tanpa mengganggu user.
+
+### 4. Endpoint API Riwayat Simulasi
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/simulasi/tabel` | Riwayat simulasi berhalaman (server-side pagination) |
+| `GET` | `/api/simulasi/agregat` | Rata-rata margin per layanan (`selectRaw` + `groupBy`) |
+
+**`GET /api/simulasi/tabel`** — Query parameter:
+
+| Parameter | Contoh | Deskripsi |
+|---|---|---|
+| `dari` | `2026-10-01` | Filter mulai tanggal (inclusive) |
+| `sampai` | `2026-10-31` | Filter sampai tanggal (inclusive) |
+| `layanan` | `SRV_EKO` | Filter berdasarkan service_id yang recommended |
+| `per_page` | `15` | Jumlah item per halaman (maks 100) |
+
+Response menggunakan format pagination Laravel (`data`, `current_page`, `per_page`, `total`, `last_page`, dll.) dan menyertakan Eager Loading relasi `options.service`, `kotaAsal`, dan `kotaTujuan`.
+
+**`GET /api/simulasi/agregat`** — Mengembalikan rata-rata `persentase_ongkir` per layanan yang dikelompokkan dengan `groupBy('service_id')`, diurutkan dari margin terendah.
+
+---
 
 ## Perilaku Kalkulasi
 
@@ -393,4 +453,5 @@ Pop-Location
 | `6-db` | Skema database |
 | `6-prototype` | Prototype statis (HTML/CSS) |
 | `7-prototype` | Prototype interaktif (JavaScript) |
-| `8-react` | Migrasi ke komponen React (branch ini) |
+| `8-react` | Migrasi ke komponen React |
+| `laravel` | Migrasi ke Laravel, Redis caching, Eloquent, async logging (branch ini) |

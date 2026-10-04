@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Shipment;
+use App\Models\ShipmentOption;
+use App\Models\ShippingRate;
 use App\Services\LocationResolver;
 use App\Services\RecommendationEngine;
 use Illuminate\Http\JsonResponse;
@@ -10,7 +13,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Throwable;
 
 class ShippingCalculationController extends Controller
 {
@@ -58,42 +60,31 @@ class ShippingCalculationController extends Controller
         $beratDitagih = (int) ceil(max($beratKg, $beratVolume));
 
         $cacheKey = "rates:{$origin->location_id}:{$destination->location_id}";
-        $rates = collect(Cache::remember($cacheKey, 3600, function () use ($origin, $destination): array {
-            return DB::table('shipping_rates')
-                ->join('shipping_services', 'shipping_services.service_id', '=', 'shipping_rates.service_id')
-                ->where('shipping_rates.kota_asal_id', $origin->location_id)
-                ->where('shipping_rates.kota_tujuan_id', $destination->location_id)
-                ->where('shipping_services.is_active', true)
-                ->orderBy('shipping_rates.tarif_per_kg')
-                ->get([
-                    'shipping_rates.tarif_per_kg',
-                    'shipping_rates.estimasi_sla_label',
-                    'shipping_rates.estimasi_sla_hari',
-                    'shipping_services.service_id',
-                    'shipping_services.nama_layanan',
-                    'shipping_services.deskripsi',
-                ])
-                ->map(fn (object $row): array => (array) $row)
-                ->all();
-        }))->map(fn (array $row): object => (object) $row);
+        $rates = Cache::remember($cacheKey, 3600, function () use ($origin, $destination) {
+            return ShippingRate::with('service:service_id,nama_layanan,deskripsi')
+                ->whereHas('service', fn ($q) => $q->where('is_active', true))
+                ->where('kota_asal_id', $origin->location_id)
+                ->where('kota_tujuan_id', $destination->location_id)
+                ->orderBy('tarif_per_kg')
+                ->get();
+        });
 
         $options = [];
         $tarifTermurah = null;
         foreach ($rates as $rate) {
-            $tarifPerKg = (float) $rate->tarif_per_kg;
-            $totalOngkir = $tarifPerKg * $beratDitagih;
+            $totalOngkir = $rate->tarif_per_kg * $beratDitagih;
             $persentaseOngkir = round(($totalOngkir / $hargaJual) * 100, 1);
             $kategori = $persentaseOngkir > 30 ? 'Merah' : ($persentaseOngkir > 15 ? 'Kuning' : 'Hijau');
             $tarifTermurah = $tarifTermurah === null ? $totalOngkir : min($tarifTermurah, $totalOngkir);
 
             $options[] = [
                 'service_id' => $rate->service_id,
-                'nama_layanan' => $rate->nama_layanan,
-                'deskripsi' => $rate->deskripsi,
-                'tarif_per_kg' => $tarifPerKg,
+                'nama_layanan' => $rate->service->nama_layanan,
+                'deskripsi' => $rate->service->deskripsi,
+                'tarif_per_kg' => $rate->tarif_per_kg,
                 'tarif_ongkir' => $totalOngkir,
                 'estimasi_sla' => $rate->estimasi_sla_label,
-                'estimasi_sla_hari' => (float) $rate->estimasi_sla_hari,
+                'estimasi_sla_hari' => $rate->estimasi_sla_hari,
                 'persentase_ongkir' => $persentaseOngkir,
                 'kategori_risiko_margin' => $kategori,
                 'status_ketersediaan_rute' => 'Tersedia',
@@ -129,30 +120,36 @@ class ShippingCalculationController extends Controller
             'rule_code_applied' => $option['rule_code_applied'],
         ], $options);
 
-        try {
-            DB::transaction(function () use ($shipmentId, $origin, $destination, $beratKg, $panjangCm, $lebarCm, $tinggiCm, $beratVolume, $beratDitagih, $hargaJual, $shipmentOptions): void {
-                DB::table('shipments')->insert([
-                    'shipment_id' => $shipmentId,
-                    'kota_asal_id' => $origin->location_id,
-                    'kota_tujuan_id' => $destination->location_id,
-                    'berat_kg' => $beratKg,
-                    'panjang_cm' => $panjangCm ?: null,
-                    'lebar_cm' => $lebarCm ?: null,
-                    'tinggi_cm' => $tinggiCm ?: null,
-                    'berat_volume_kg' => $beratVolume,
-                    'berat_ditagih' => $beratDitagih,
-                    'harga_jual_produk' => $hargaJual,
+        $catat = [
+            'shipment_id' => $shipmentId,
+            'kota_asal_id' => $origin->location_id,
+            'kota_tujuan_id' => $destination->location_id,
+            'berat_kg' => $beratKg,
+            'panjang_cm' => $panjangCm ?: null,
+            'lebar_cm' => $lebarCm ?: null,
+            'tinggi_cm' => $tinggiCm ?: null,
+            'berat_volume_kg' => $beratVolume,
+            'berat_ditagih' => $beratDitagih,
+            'harga_jual_produk' => $hargaJual,
+        ];
+
+        // Dikerjakan SETELAH JSON terkirim ke React; penjual tidak menunggu INSERT.
+        dispatch(function () use ($catat, $shipmentOptions): void {
+            try {
+                DB::transaction(function () use ($catat, $shipmentOptions): void {
+                    Shipment::create($catat);
+
+                    if ($shipmentOptions !== []) {
+                        ShipmentOption::insert($shipmentOptions);
+                    }
+                });
+            } catch (\Throwable $e) {
+                Log::error('Gagal mencatat simulasi.', [
+                    'shipment_id' => $catat['shipment_id'] ?? null,
+                    'exception' => $e->getMessage(),
                 ]);
-
-                if ($shipmentOptions !== []) {
-                    DB::table('shipment_options')->insert($shipmentOptions);
-                }
-            });
-        } catch (Throwable $exception) {
-            Log::error('Gagal menyimpan shipment.', ['exception' => $exception]);
-
-            return response()->json(['error' => 'Gagal menyimpan data kalkulasi.'], 500);
-        }
+            }
+        })->afterResponse();
 
         return response()->json([
             'success' => true,
