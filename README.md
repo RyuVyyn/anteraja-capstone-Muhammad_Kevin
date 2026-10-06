@@ -18,6 +18,7 @@ Repository ini merupakan capstone project untuk program Anteraja NextGen AI Acad
 - [Eloquent, Async Logging, & API Riwayat Simulasi](#eloquent-async-logging--api-riwayat-simulasi)
 - [Perilaku Kalkulasi](#perilaku-kalkulasi)
 - [Cara Menjalankan](#cara-menjalankan)
+- [Panduan Pengujian & UAT (TESTING.md)](TESTING.md)
 - [Riwayat Branch](#riwayat-branch)
 
 ## Tentang Project
@@ -443,6 +444,9 @@ Push-Location backend
 php artisan cache:clear
 Pop-Location
 ```
+
+> [!TIP]
+> Untuk panduan langkah demi langkah menjalankan server di lingkungan **Lokal (Localhost)** dan **Supabase (Remote Cloud)**, panduan automated test, serta skenario lengkap **User Acceptance Testing (UAT)**, silakan merujuk ke dokumen [TESTING.md](TESTING.md).
 
 ## Riwayat Branch
 
