@@ -60,14 +60,23 @@ class ShippingCalculationController extends Controller
         $beratDitagih = (int) ceil(max($beratKg, $beratVolume));
 
         $cacheKey = "rates:{$origin->location_id}:{$destination->location_id}";
-        $rates = Cache::remember($cacheKey, 3600, function () use ($origin, $destination) {
+        $rates = collect(Cache::remember($cacheKey, 3600, function () use ($origin, $destination): array {
             return ShippingRate::with('service:service_id,nama_layanan,deskripsi')
                 ->whereHas('service', fn ($q) => $q->where('is_active', true))
                 ->where('kota_asal_id', $origin->location_id)
                 ->where('kota_tujuan_id', $destination->location_id)
                 ->orderBy('tarif_per_kg')
-                ->get();
-        });
+                ->get()
+                ->map(fn (ShippingRate $rate): array => [
+                    'service_id' => $rate->service_id,
+                    'tarif_per_kg' => $rate->tarif_per_kg,
+                    'estimasi_sla_label' => $rate->estimasi_sla_label,
+                    'estimasi_sla_hari' => $rate->estimasi_sla_hari,
+                    'nama_layanan' => $rate->service->nama_layanan,
+                    'deskripsi' => $rate->service->deskripsi,
+                ])
+                ->all();
+        }))->map(fn (array $row): object => (object) $row);
 
         $options = [];
         $tarifTermurah = null;
@@ -79,8 +88,8 @@ class ShippingCalculationController extends Controller
 
             $options[] = [
                 'service_id' => $rate->service_id,
-                'nama_layanan' => $rate->service->nama_layanan,
-                'deskripsi' => $rate->service->deskripsi,
+                'nama_layanan' => $rate->nama_layanan,
+                'deskripsi' => $rate->deskripsi,
                 'tarif_per_kg' => $rate->tarif_per_kg,
                 'tarif_ongkir' => $totalOngkir,
                 'estimasi_sla' => $rate->estimasi_sla_label,
