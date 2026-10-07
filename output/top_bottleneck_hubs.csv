@@ -1,0 +1,6 @@
+hub_id,package_count,avg_dwell_hours,median_dwell_hours,total_pairs,invalid_pairs,invalid_pct
+HUB-007,373,39.41,39.44,410,37,9.02
+HUB-025,327,39.3,39.46,360,33,9.17
+HUB-012,341,39.21,39.62,387,46,11.89
+HUB-018,324,38.93,39.01,360,36,10.0
+HUB-020,348,13.4,13.71,395,47,11.9
