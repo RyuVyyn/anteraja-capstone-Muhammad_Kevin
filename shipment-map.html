@@ -65,6 +65,36 @@
       color: #64748b;
     }
 
+    .status-legend {
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.out-for-delivery {
+      background-color: #0284c7;
+    }
+
+    .legend-dot.in-transit {
+      background-color: #f59e0b;
+    }
+
+    .legend-dot.delivered {
+      background-color: #10b981;
+    }
+
     #map-container {
       position: relative;
       flex: 1;
@@ -77,6 +107,69 @@
       height: 100%;
       min-height: 500px;
     }
+
+    /* Custom InfoWindow Styling */
+    .info-window-card {
+      padding: 10px 12px;
+      max-width: 260px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tracking-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .tracking-no {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 9999px;
+    }
+
+    .status-out-for-delivery {
+      background-color: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .status-in-transit {
+      background-color: #fef3c7;
+      color: #b45309;
+    }
+
+    .status-delivered {
+      background-color: #d1fae5;
+      color: #047857;
+    }
+
+    .info-detail {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+      border-top: 1px dashed #e2e8f0;
+      padding-top: 6px;
+    }
   </style>
 </head>
 <body>
@@ -87,6 +180,20 @@
       <div class="brand-title">
         <h1>Monitoring Pengiriman</h1>
         <p>Live Courier & Package Location Tracking</p>
+      </div>
+    </div>
+    <div class="status-legend">
+      <div class="legend-item">
+        <span class="legend-dot out-for-delivery"></span>
+        <span>Out for Delivery</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot in-transit"></span>
+        <span>In Transit</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot delivered"></span>
+        <span>Delivered</span>
       </div>
     </div>
   </header>
@@ -105,6 +212,68 @@
         mapTypeControl: false,
         fullscreenControl: true,
         streetViewControl: false
+      });
+
+      // 2. Dummy Data Shipments dengan koordinat lat dan lng
+      const shipments = [
+        {
+          trackingNumber: "ANTR-JKT-1001",
+          lat: -6.1754,
+          lng: 106.8272,
+          status: "Out for Delivery"
+        },
+        {
+          trackingNumber: "ANTR-JKT-1002",
+          lat: -6.2297,
+          lng: 106.8074,
+          status: "In Transit"
+        },
+        {
+          trackingNumber: "ANTR-JKT-1003",
+          lat: -6.2615,
+          lng: 106.7811,
+          status: "Delivered"
+        }
+      ];
+
+      // Helper function untuk membuat tampilan InfoWindow HTML
+      function createInfoWindowContent(shipment) {
+        let statusClass = "status-in-transit";
+        if (shipment.status === "Out for Delivery") statusClass = "status-out-for-delivery";
+        if (shipment.status === "Delivered") statusClass = "status-delivered";
+
+        return `
+          <div class="info-window-card">
+            <div class="info-header">
+              <span class="tracking-badge">Anteraja Package</span>
+            </div>
+            <div class="tracking-no">${shipment.trackingNumber}</div>
+            <span class="status-badge ${statusClass}">${shipment.status}</span>
+            <div class="info-detail">
+              <strong>Koordinat:</strong> ${shipment.lat.toFixed(4)}, ${shipment.lng.toFixed(4)}
+            </div>
+          </div>
+        `;
+      }
+
+      // Shared InfoWindow instance
+      const infoWindow = new google.maps.InfoWindow();
+
+      // 3. Render Marker Biasa (dengan koordinat lat & lng)
+      shipments.forEach((shipment) => {
+        if (shipment.lat !== undefined && shipment.lng !== undefined) {
+          const marker = new google.maps.Marker({
+            position: { lat: shipment.lat, lng: shipment.lng },
+            map: map,
+            title: `Resi: ${shipment.trackingNumber}`
+          });
+
+          // Event listener click untuk membuka InfoWindow
+          marker.addListener("click", () => {
+            infoWindow.setContent(createInfoWindowContent(shipment));
+            infoWindow.open(map, marker);
+          });
+        }
       });
     }
   </script>
