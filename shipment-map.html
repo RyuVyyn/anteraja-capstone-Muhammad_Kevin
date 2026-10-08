@@ -324,7 +324,35 @@
     }
   </script>
 
-  <!-- Google Maps JavaScript API with callback initMap -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&callback=initMap" async defer></script>
+  <!-- Auto-loader for .env and Google Maps JavaScript API -->
+  <script>
+    async function loadGoogleMaps() {
+      let apiKey = "YOUR_API_KEY_HERE";
+
+      try {
+        // Membaca file .env secara langsung dari local server
+        const response = await fetch(".env");
+        if (response.ok) {
+          const envText = await response.text();
+          const match = envText.match(/GOOGLE_MAPS_API_KEY\s*=\s*([^\r\n#]+)/);
+          if (match && match[1]) {
+            apiKey = match[1].trim().replace(/^["']|["']$/g, "");
+            console.log("✓ Berhasil memuat GOOGLE_MAPS_API_KEY dari .env");
+          }
+        }
+      } catch (err) {
+        console.warn("Info: Tidak dapat membaca file .env via fetch (buka melalui local server seperti npx serve untuk membaca .env).", err);
+      }
+
+      // Memuat Google Maps API secara dinamis dengan API key dari .env
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    loadGoogleMaps();
+  </script>
 </body>
 </html>
