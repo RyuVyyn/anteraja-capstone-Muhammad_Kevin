@@ -276,6 +276,24 @@
         `;
       }
 
+      // Helper function untuk menentukan ikon dan warna marker sesuai status
+      function getMarkerIcon(status) {
+        let color = "#0284c7"; // Default: Out for Delivery (Biru)
+        if (status === "In Transit") color = "#f59e0b"; // In Transit (Oranye/Kuning)
+        if (status === "Delivered") color = "#10b981"; // Delivered (Hijau)
+
+        return {
+          // Bentuk pin SVG (Material Location Pin dengan lingkaran di tengah)
+          path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
+          fillColor: color,
+          fillOpacity: 1,
+          strokeWeight: 1.5,
+          strokeColor: "#ffffff",
+          scale: 1.8,
+          anchor: new google.maps.Point(12, 22)
+        };
+      }
+
       // Shared InfoWindow instance
       const infoWindow = new google.maps.InfoWindow();
 
@@ -285,7 +303,8 @@
           const marker = new google.maps.Marker({
             position: { lat: shipment.lat, lng: shipment.lng },
             map: map,
-            title: `Resi: ${shipment.trackingNumber}`
+            title: `Resi: ${shipment.trackingNumber}`,
+            icon: getMarkerIcon(shipment.status)
           });
 
           // Event listener click untuk membuka InfoWindow
@@ -308,7 +327,8 @@
               const marker = new google.maps.Marker({
                 position: geocodedLocation,
                 map: map,
-                title: `Resi: ${shipment.trackingNumber} (${shipment.address})`
+                title: `Resi: ${shipment.trackingNumber} (${shipment.address})`,
+                icon: getMarkerIcon(shipment.status)
               });
 
               marker.addListener("click", () => {
