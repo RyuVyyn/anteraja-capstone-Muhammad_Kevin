@@ -170,6 +170,19 @@
       border-top: 1px dashed #e2e8f0;
       padding-top: 6px;
     }
+
+    .info-geocoded-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #6366f1;
+      background: #eef2ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -214,7 +227,7 @@
         streetViewControl: false
       });
 
-      // 2. Dummy Data Shipments dengan koordinat lat dan lng
+      // 2. Dummy Data Shipments (3 koordinat lat/lng + 1 alamat untuk geocoding)
       const shipments = [
         {
           trackingNumber: "ANTR-JKT-1001",
@@ -233,11 +246,17 @@
           lat: -6.2615,
           lng: 106.7811,
           status: "Delivered"
+        },
+        // Objek khusus bonus: menggunakan address untuk geocoding
+        {
+          trackingNumber: "ANTR-JKT-1004",
+          address: "Monumen Nasional, Jakarta",
+          status: "Out for Delivery"
         }
       ];
 
       // Helper function untuk membuat tampilan InfoWindow HTML
-      function createInfoWindowContent(shipment) {
+      function createInfoWindowContent(shipment, isGeocoded = false) {
         let statusClass = "status-in-transit";
         if (shipment.status === "Out for Delivery") statusClass = "status-out-for-delivery";
         if (shipment.status === "Delivered") statusClass = "status-delivered";
@@ -250,8 +269,9 @@
             <div class="tracking-no">${shipment.trackingNumber}</div>
             <span class="status-badge ${statusClass}">${shipment.status}</span>
             <div class="info-detail">
-              <strong>Koordinat:</strong> ${shipment.lat.toFixed(4)}, ${shipment.lng.toFixed(4)}
+              ${isGeocoded ? `<strong>Alamat:</strong> ${shipment.address}` : `<strong>Koordinat:</strong> ${shipment.lat.toFixed(4)}, ${shipment.lng.toFixed(4)}`}
             </div>
+            ${isGeocoded ? `<div class="info-geocoded-tag">📍 Geocoded from Address</div>` : ""}
           </div>
         `;
       }
@@ -270,8 +290,34 @@
 
           // Event listener click untuk membuka InfoWindow
           marker.addListener("click", () => {
-            infoWindow.setContent(createInfoWindowContent(shipment));
+            infoWindow.setContent(createInfoWindowContent(shipment, false));
             infoWindow.open(map, marker);
+          });
+        }
+      });
+
+      // 4. Render Marker Geocoding (Kriteria Bonus: mencari koordinat dari properti address)
+      const geocoder = new google.maps.Geocoder();
+
+      shipments.forEach((shipment) => {
+        if (shipment.address) {
+          geocoder.geocode({ address: shipment.address }, (results, status) => {
+            if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+              const geocodedLocation = results[0].geometry.location;
+
+              const marker = new google.maps.Marker({
+                position: geocodedLocation,
+                map: map,
+                title: `Resi: ${shipment.trackingNumber} (${shipment.address})`
+              });
+
+              marker.addListener("click", () => {
+                infoWindow.setContent(createInfoWindowContent(shipment, true));
+                infoWindow.open(map, marker);
+              });
+            } else {
+              console.error(`Geocoding gagal untuk alamat: "${shipment.address}". Status: ${status}`);
+            }
           });
         }
       });
