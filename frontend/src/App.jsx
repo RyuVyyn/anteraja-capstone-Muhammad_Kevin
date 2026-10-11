@@ -1,4 +1,5 @@
 import { useMemo, useRef } from 'react'
+import anterajaLogo from './assets/anteraja-logo.png'
 import './App.css'
 import { ShipmentProvider, useShipmentContext } from './context/ShipmentContext'
 import { filterTabs, services as fallbackServices } from './data/serviceCatalog'
@@ -277,7 +278,7 @@ function ShipmentAppContent() {
           <div className="header-brand">
             <a href="#" aria-label="Beranda Anteraja">
               <img
-                src="src/assets/anteraja-logo.png"
+                src={anterajaLogo}
                 alt="Anteraja Logo"
               />
             </a>
