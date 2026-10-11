@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
 import anterajaLogo from './assets/anteraja-logo.png'
 import './App.css'
+import { I18nProvider, useTranslation } from './i18n'
 import { ShipmentProvider, useShipmentContext } from './context/ShipmentContext'
-import { filterTabs, services as fallbackServices } from './data/serviceCatalog'
+import { services as fallbackServices } from './data/serviceCatalog'
 import { ShippingForm } from './features/shipping-form/components/ShippingForm'
 import { MarginCalculator } from './features/margin-calculator/components/MarginCalculator'
 import { RecommendationEngine } from './features/recommendation-engine/components/RecommendationEngine'
@@ -35,6 +36,7 @@ const limitWeightPrecision = (value) => {
 }
 
 function ShipmentAppContent() {
+  const { t, lang, locale, setLang } = useTranslation()
   const {
     origin,
     setOrigin,
@@ -47,7 +49,6 @@ function ShipmentAppContent() {
     price,
     setPrice,
     activeFilter,
-    setActiveFilter,
     selectedService,
     setSelectedService,
     toast,
@@ -60,8 +61,8 @@ function ShipmentAppContent() {
     setIsSubmitting,
   } = useShipmentContext()
 
-  const { cities, isLoading: isLocationLoading, isError: isLocationError, errorMessage: locationError } = useLocationData()
-  const { shippingResult, isCalculating, calcError, calculateShipping } = useShippingCalculation()
+  const { cities } = useLocationData()
+  const { shippingResult, calcError, calculateShipping } = useShippingCalculation()
   const servicesGridRef = useRef(null)
 
   const volumeSummary = useMemo(() => {
@@ -84,15 +85,23 @@ function ShipmentAppContent() {
   // Transform API response into service card objects for the UI
   const services = useMemo(() => {
     const serviceIdMap = {
-      'SRV_EKO': { id: 'ekonomi', category: 'Layanan Hemat', ribbonLabel: 'PILIHAN PALING HEMAT', ribbonBadge: 'Hemat Ongkir', tones: 'primary', tags: ['cheapest', 'recommended'] },
-      'SRV_REG': { id: 'reguler', category: 'PILIHAN POPULER', ribbonLabel: '', ribbonBadge: '', tones: 'default', tags: ['regular'] },
-      'SRV_NXT': { id: 'nextday', category: 'Kilat Esok Tiba', ribbonLabel: 'PALING CEPAT', ribbonBadge: 'Besok Sampai', tones: 'default', tags: ['fastest'] },
-      'SRV_SMD': { id: 'sameday', category: 'Antar Instan 8 Jam', ribbonLabel: 'Same Day', ribbonBadge: 'Same Day', tones: 'default', tags: ['sameday'] },
+      'SRV_EKO': { id: 'ekonomi', categoryKey: 'services.categoryHemat', ribbonLabelKey: 'services.ribbonCheapest', ribbonBadgeKey: 'services.badgeSave', tones: 'primary', tags: ['cheapest', 'recommended'] },
+      'SRV_REG': { id: 'reguler', categoryKey: 'services.categoryPopular', ribbonLabelKey: '', ribbonBadgeKey: '', tones: 'default', tags: ['regular'] },
+      'SRV_NXT': { id: 'nextday', categoryKey: 'services.categoryNextday', ribbonLabelKey: 'services.ribbonFastest', ribbonBadgeKey: 'services.badgeTomorrow', tones: 'default', tags: ['fastest'] },
+      'SRV_SMD': { id: 'sameday', categoryKey: 'services.categorySameday', ribbonLabelKey: 'services.ribbonSameDay', ribbonBadgeKey: 'services.badgeSameDay', tones: 'default', tags: ['sameday'] },
     }
+
+    const withLabels = (base, override) => ({
+      ...base,
+      ...override,
+      category: t(override?.categoryKey ?? base.categoryKey),
+      ribbonLabel: t(override?.ribbonLabelKey ?? base.ribbonLabelKey),
+      ribbonBadge: t(override?.ribbonBadgeKey ?? base.ribbonBadgeKey),
+    })
 
     if (!shippingResult) {
       return fallbackServices.map((service) => ({
-        ...service,
+        ...withLabels(service),
         price: '',
         priceRaw: null,
         tarifPerKg: null,
@@ -101,7 +110,7 @@ function ShipmentAppContent() {
         pending: true,
         disabled: false,
         tones: service.id === 'ekonomi' ? 'primary' : 'default',
-        eta: 'Belum dihitung',
+        eta: t('services.etaPending'),
       }))
     }
 
@@ -113,7 +122,7 @@ function ShipmentAppContent() {
 
       if (!option) {
         return {
-          ...service,
+          ...withLabels(service),
           price: '-',
           priceRaw: null,
           tarifPerKg: null,
@@ -122,17 +131,16 @@ function ShipmentAppContent() {
           pending: false,
           disabled: true,
           tones: 'disabled',
-          eta: 'Tidak tersedia',
-          unavailableMessage: 'Layanan ini tidak tersedia untuk rute yang dipilih.',
+          eta: t('services.etaUnavailable'),
+          unavailableMessage: t('services.unavailable'),
         }
       }
 
       const mapping = serviceIdMap[option.service_id]
       return {
-        ...service,
-        ...mapping,
+        ...withLabels(service, mapping),
         name: `Anteraja ${option.nama_layanan}`,
-        price: `Rp ${new Intl.NumberFormat('id-ID').format(option.tarif_ongkir)}`,
+        price: `Rp ${new Intl.NumberFormat(locale).format(option.tarif_ongkir)}`,
         priceRaw: option.tarif_ongkir,
         eta: option.estimasi_sla,
         etaDays: option.estimasi_sla_hari,
@@ -147,7 +155,7 @@ function ShipmentAppContent() {
         disabled: false,
       }
     })
-  }, [shippingResult])
+  }, [shippingResult, locale, t])
 
   const visibleServices =
     activeFilter === 'all'
@@ -172,7 +180,7 @@ function ShipmentAppContent() {
   const getNumericError = (field, value) => {
     const numericValue = field === 'weight' ? parseWeight(value) : parseNumber(value)
     if (Number.isNaN(numericValue) || numericValue <= 0) {
-      return 'Masukkan angka yang valid'
+      return t('errors.invalidNumber')
     }
     return ''
   }
@@ -248,7 +256,7 @@ function ShipmentAppContent() {
     setIsSubmitting(false)
 
     if (result?.success) {
-      setSubmitMessage('Tarif pengiriman berhasil dihitung dari server!')
+      setSubmitMessage(t('app.submitSuccess'))
       setSelectedService('')  // Reset selection
 
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -276,19 +284,33 @@ function ShipmentAppContent() {
       <header className="site-header">
         <div className="header-inner">
           <div className="header-brand">
-            <a href="#" aria-label="Beranda Anteraja">
+            <a href="#" aria-label={t('header.home')}>
               <img
                 src={anterajaLogo}
                 alt="Anteraja Logo"
               />
             </a>
           </div>
-          <nav className="header-nav" aria-label="Navigasi Utama" />
+          <nav className="header-nav" aria-label={t('header.mainNav')} />
           <div className="header-actions">
-            <div className="lang-switcher" role="group" aria-label="Pilihan Bahasa">
-              <span className="lang-active">ID</span>
+            <div className="lang-switcher" role="group" aria-label={t('header.langLabel')}>
+              <button
+                type="button"
+                className={lang === 'id' ? 'lang-active' : 'lang-inactive'}
+                aria-pressed={lang === 'id'}
+                onClick={() => setLang('id')}
+              >
+                ID
+              </button>
               <span className="lang-sep" aria-hidden="true">|</span>
-              <span className="lang-inactive">EN</span>
+              <button
+                type="button"
+                className={lang === 'en' ? 'lang-active' : 'lang-inactive'}
+                aria-pressed={lang === 'en'}
+                onClick={() => setLang('en')}
+              >
+                EN
+              </button>
             </div>
           </div>
         </div>
@@ -300,7 +322,7 @@ function ShipmentAppContent() {
             <ol className="breadcrumb-list">
               <li className="bc-active">
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">calculate</span>
-                <span>Kalkulator Ongkir &amp; Estimasi Pengiriman</span>
+                <span>{t('breadcrumb.current')}</span>
               </li>
             </ol>
           </nav>
@@ -316,7 +338,6 @@ function ShipmentAppContent() {
             submitMessage={submitMessage}
             isSubmitting={isSubmitting}
             cities={cities}
-            locationStatus={{ isLoading: isLocationLoading, isError: isLocationError, message: locationError }}
             onOriginChange={(event) => setOrigin(event.target.value)}
             onDestinationChange={(event) => setDestination(event.target.value)}
             onWeightChange={handleWeightChange}
@@ -331,15 +352,12 @@ function ShipmentAppContent() {
           {calcError && (
             <div className="btn-submit__error" role="alert" style={{ background: 'var(--color-error-container, #fde8e8)', color: 'var(--color-error, #c62828)', padding: '12px 16px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">error</span>
-              {calcError}
+              {t(calcError)}
             </div>
           )}
 
           <div ref={servicesGridRef}>
             <RecommendationEngine
-              filterTabs={filterTabs}
-              activeFilter={activeFilter}
-              setActiveFilter={setActiveFilter}
               allServices={services}
               shippingResult={shippingResult}
               visibleServices={visibleServices}
@@ -363,101 +381,101 @@ function ShipmentAppContent() {
                 />
               </div>
               <address className="footer-contact">
-                <p className="footer-contact-title">Butuh bantuan? Hubungi Anteraja Care</p>
+                <p className="footer-contact-title">{t('footer.helpTitle')}</p>
                 <div className="footer-contact-items">
                   <p><span className="contact-label">X:</span><span>@AnterajaCare</span></p>
-                  <p><span className="contact-label">Call Center:</span><span>021 - 5066 - 3333</span></p>
-                  <p><span className="contact-label">Customer Service:</span><a href="mailto:cs@anteraja.id">cs@anteraja.id</a></p>
+                  <p><span className="contact-label">{t('footer.callCenter')}</span><span>021 - 5066 - 3333</span></p>
+                  <p><span className="contact-label">{t('footer.customerService')}</span><a href="mailto:cs@anteraja.id">cs@anteraja.id</a></p>
                 </div>
               </address>
             </div>
 
-            <nav aria-label="Tentang dan Produk Anteraja" className="footer-nav-group">
+            <nav aria-label={t('footer.navAboutProduct')} className="footer-nav-group">
               <div className="footer-nav-section">
-                <h3 className="footer-nav-heading">Tentang Anteraja</h3>
+                <h3 className="footer-nav-heading">{t('footer.aboutHeading')}</h3>
                 <ul className="footer-nav-list">
-                  <li><a href="#">Profil Perusahaan</a></li>
-                  <li><a href="#">Aplikasi Anteraja</a></li>
-                  <li><a href="#">FAQ</a></li>
-                  <li><a href="#">Karir</a></li>
-                  <li><a href="#">Blog</a></li>
+                  <li><a href="#">{t('footer.companyProfile')}</a></li>
+                  <li><a href="#">{t('footer.app')}</a></li>
+                  <li><a href="#">{t('footer.faq')}</a></li>
+                  <li><a href="#">{t('footer.career')}</a></li>
+                  <li><a href="#">{t('footer.blog')}</a></li>
                 </ul>
               </div>
               <div className="footer-nav-section">
-                <h3 className="footer-nav-heading">Produk Anteraja</h3>
+                <h3 className="footer-nav-heading">{t('footer.productHeading')}</h3>
                 <ul className="footer-nav-list">
-                  <li><a href="#">Pengiriman Corporate</a></li>
-                  <li><a href="#">Pengiriman UMKM</a></li>
-                </ul>
-              </div>
-            </nav>
-
-            <nav aria-label="Layanan dan Informasi" className="footer-nav-group">
-              <div className="footer-nav-section">
-                <h3 className="footer-nav-heading">Layanan</h3>
-                <ul className="footer-nav-list">
-                  <li><a href="#">Jenis Pengiriman</a></li>
-
-                  <li><a href="#">Lokasi Anteraja</a></li>
-                  <li><a href="#">Lacak Pengiriman</a></li>
-                  <li><a href="#">Cek Ongkir</a></li>
-                </ul>
-              </div>
-              <div className="footer-nav-section">
-                <h3 className="footer-nav-heading">Informasi</h3>
-                <ul className="footer-nav-list">
-                  <li><a href="#">Syarat &amp; Ketentuan</a></li>
-                  <li><a href="#">Kebijakan Privasi</a></li>
-                  <li><a href="#">Quality Policy</a></li>
-                  <li><a href="#">Anteraja Whistleblowing System</a></li>
+                  <li><a href="#">{t('footer.corporate')}</a></li>
+                  <li><a href="#">{t('footer.umkm')}</a></li>
                 </ul>
               </div>
             </nav>
 
-            <nav aria-label="Kerjasama Bisnis" className="footer-nav-section">
-              <h3 className="footer-nav-heading">Kerjasama</h3>
+            <nav aria-label={t('footer.navServiceInfo')} className="footer-nav-group">
+              <div className="footer-nav-section">
+                <h3 className="footer-nav-heading">{t('footer.serviceHeading')}</h3>
+                <ul className="footer-nav-list">
+                  <li><a href="#">{t('footer.shippingTypes')}</a></li>
+
+                  <li><a href="#">{t('footer.locations')}</a></li>
+                  <li><a href="#">{t('footer.track')}</a></li>
+                  <li><a href="#">{t('footer.checkFare')}</a></li>
+                </ul>
+              </div>
+              <div className="footer-nav-section">
+                <h3 className="footer-nav-heading">{t('footer.infoHeading')}</h3>
+                <ul className="footer-nav-list">
+                  <li><a href="#">{t('footer.terms')}</a></li>
+                  <li><a href="#">{t('footer.privacy')}</a></li>
+                  <li><a href="#">{t('footer.quality')}</a></li>
+                  <li><a href="#">{t('footer.whistleblowing')}</a></li>
+                </ul>
+              </div>
+            </nav>
+
+            <nav aria-label={t('footer.navPartnership')} className="footer-nav-section">
+              <h3 className="footer-nav-heading">{t('footer.partnershipHeading')}</h3>
               <ul className="footer-nav-list">
-                <li><a href="#">Keagenan Pengusaha Anteraja</a></li>
-                <li><a href="#">Jadi Partner Bisnis</a></li>
-                <li><a href="#">Marketing</a></li>
+                <li><a href="#">{t('footer.agency')}</a></li>
+                <li><a href="#">{t('footer.partner')}</a></li>
+                <li><a href="#">{t('footer.marketing')}</a></li>
               </ul>
             </nav>
 
-            <aside aria-label="Media Sosial dan Unduh Aplikasi" className="footer-nav-group">
+            <aside aria-label={t('footer.navSocial')} className="footer-nav-group">
               <div className="footer-nav-section">
-                <h3 className="footer-nav-heading">Social Media</h3>
+                <h3 className="footer-nav-heading">{t('footer.socialHeading')}</h3>
                 <div className="social-links">
-                  <a href="#" aria-label="Facebook Anteraja" className="social-link">
+                  <a href="#" aria-label={t('footer.social.facebook')} className="social-link">
                     <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
                   </a>
-                  <a href="#" aria-label="Instagram Anteraja" className="social-link">
+                  <a href="#" aria-label={t('footer.social.instagram')} className="social-link">
                     <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
                   </a>
-                  <a href="#" aria-label="TikTok Anteraja" className="social-link">
+                  <a href="#" aria-label={t('footer.social.tiktok')} className="social-link">
                     <svg viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-1.01-.02 3.82.02 7.64-.02 11.46-.11 2.37-1.12 4.67-2.88 6.27-2.02 1.83-4.88 2.64-7.59 2.14-3.13-.57-5.83-2.85-6.72-5.91-.98-3.32-.08-7.1 2.33-9.52 1.85-1.85 4.54-2.73 7.15-2.33v4.06c-1.37-.3-2.87-.1-4.04.66-1.04.68-1.72 1.86-1.82 3.1-.14 1.69.75 3.39 2.27 4.16 1.44.73 3.23.63 4.59-.26 1.05-.69 1.66-1.92 1.67-3.18V0h.22z"></path></svg>
                   </a>
-                  <a href="#" aria-label="X Anteraja" className="social-link">
+                  <a href="#" aria-label={t('footer.social.x')} className="social-link">
                     <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
                   </a>
-                  <a href="#" aria-label="YouTube Anteraja" className="social-link">
+                  <a href="#" aria-label={t('footer.social.youtube')} className="social-link">
                     <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>
                   </a>
                 </div>
               </div>
               <div className="footer-nav-section">
-                <h4 className="app-download-heading">Download Aplikasi</h4>
+                <h4 className="app-download-heading">{t('footer.downloadHeading')}</h4>
                 <div className="app-downloads">
                   <a href="#" className="app-link">
                     <span className="material-symbols-outlined" style={{ fontSize: '20px' }} aria-hidden="true">app_badging</span>
                     <div className="app-link-text">
-                      <span className="small">Download on the</span>
+                      <span className="small">{t('footer.appStoreSmall')}</span>
                       <span className="name">App Store</span>
                     </div>
                   </a>
                   <a href="#" className="app-link">
                     <span className="material-symbols-outlined" style={{ fontSize: '20px' }} aria-hidden="true">play_arrow</span>
                     <div className="app-link-text">
-                      <span className="small">GET IT ON</span>
+                      <span className="small">{t('footer.googlePlaySmall')}</span>
                       <span className="name">Google Play</span>
                     </div>
                   </a>
@@ -466,7 +484,7 @@ function ShipmentAppContent() {
             </aside>
           </div>
           <div className="footer-copyright">
-            <p>Copyright © 2020 PT. Tri Adi Bersama. All rights reserved.</p>
+            <p>{t('footer.copyright')}</p>
           </div>
         </div>
       </footer>
@@ -474,15 +492,15 @@ function ShipmentAppContent() {
       {toast && (
         <div className="toast-summary" role="status" aria-live="polite">
           <span className="material-symbols-outlined" style={{ color: 'var(--color-primary)', fontSize: '20px' }} aria-hidden="true">check_circle</span>
-          <span>Layanan: <strong>{toast.name}</strong></span>
+          <span>{t('toast.service')} <strong>{toast.name}</strong></span>
           <span className="toast-summary__dot">•</span>
-          <span>Tarif: <strong>{toast.price}</strong></span>
+          <span>{t('toast.fare')} <strong>{toast.price}</strong></span>
           <span className="toast-summary__dot">•</span>
-          <span>Estimasi: {toast.eta}</span>
+          <span>{t('toast.eta')} {toast.eta}</span>
           <button
             type="button"
             className="toast-close-btn"
-            aria-label="Tutup ringkasan"
+            aria-label={t('toast.close')}
             onClick={() => setToast(null)}
             style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, marginLeft: '8px', display: 'inline-flex', alignItems: 'center' }}
           >
@@ -496,8 +514,10 @@ function ShipmentAppContent() {
 
 export default function App() {
   return (
-    <ShipmentProvider>
-      <ShipmentAppContent />
-    </ShipmentProvider>
+    <I18nProvider>
+      <ShipmentProvider>
+        <ShipmentAppContent />
+      </ShipmentProvider>
+    </I18nProvider>
   )
 }

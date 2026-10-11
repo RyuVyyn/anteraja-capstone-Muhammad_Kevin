@@ -30,17 +30,17 @@ export function useShippingCalculation() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || `Server error (${response.status})`)
+        throw new Error(data.error || 'errors.serverError')
       }
 
       if (!data.success) {
-        throw new Error(data.error || 'Kalkulasi gagal')
+        throw new Error(data.error || 'errors.calculationFailed')
       }
 
       setShippingResult(data)
       return data
     } catch (error) {
-      const message = error.message || 'Tidak dapat terhubung ke server.'
+      const message = error.message || 'errors.serverUnreachable'
       setCalcError(message)
       return null
     } finally {

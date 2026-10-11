@@ -1,16 +1,15 @@
 import { useState } from 'react'
+import { useTranslation } from '../../../i18n'
 import { RecommendationModal } from './RecommendationModal'
 
 export function RecommendationEngine({
-  filterTabs,
-  activeFilter,
-  setActiveFilter,
   allServices,
   shippingResult,
   visibleServices,
   selectedService,
   onSelectService,
 }) {
+  const { t, locale } = useTranslation()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const getMarginBadgeClass = (service) => {
@@ -45,9 +44,16 @@ export function RecommendationEngine({
     ? Math.min(...availableServices.map((service) => service.etaDays))
     : null
 
+  const getPorsiPercentage = (service) => {
+    if (service.persentaseOngkir != null) return service.persentaseOngkir
+    if (service.id === 'ekonomi') return 36
+    if (service.id === 'reguler') return 48
+    return 72
+  }
+
   return (
     <>
-      <section aria-label="Pilihan Layanan Pengiriman" className="services-grid">
+      <section aria-label={t('engine.regionLabel')} className="services-grid">
         {visibleServices.map((service) => {
           const isSelected = selectedService === service.id
           const isDisabled = service.disabled
@@ -71,7 +77,7 @@ export function RecommendationEngine({
               {isRecommended && (
                 <header className="card-ribbon card-ribbon--primary">
                   <span className="ribbon-label">
-                    <span className="material-symbols-outlined" style={{ fontSize: '15px' }} aria-hidden="true">star</span>REKOMENDASI UTAMA
+                    <span className="material-symbols-outlined" style={{ fontSize: '15px' }} aria-hidden="true">star</span>{t('engine.recommendedRibbon')}
                   </span>
                 </header>
               )}
@@ -79,7 +85,7 @@ export function RecommendationEngine({
               {isFastest && (
                 <header className="card-ribbon card-ribbon--fastest">
                   <span className="ribbon-label">
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }} aria-hidden="true">bolt</span>PALING CEPAT
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }} aria-hidden="true">bolt</span>{t('engine.fastestRibbon')}
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 600 }}>{service.eta}</span>
                 </header>
@@ -110,13 +116,13 @@ export function RecommendationEngine({
                   </div>
 
                   <div className="estimate-row">
-                    <span className={`estimate-label ${service.tones === 'disabled' ? 'estimate-label--disabled' : ''}`}>{service.tones === 'disabled' ? 'Status Layanan' : 'Estimasi Tiba'}</span>
+                    <span className={`estimate-label ${service.tones === 'disabled' ? 'estimate-label--disabled' : ''}`}>{service.tones === 'disabled' ? t('engine.serviceStatus') : t('engine.estimatedArrival')}</span>
                     <span className={`estimate-value ${service.tones === 'disabled' ? 'estimate-value--disabled' : ''}`}>{service.eta}</span>
                   </div>
 
                   <div className="price-area">
                     {service.pending ? (
-                      <div className="price-pending">Isi detail pengiriman untuk melihat tarif.</div>
+                      <div className="price-pending">{t('engine.pendingPrice')}</div>
                     ) : service.tones === 'disabled' ? (
                       <>
                         <div className="price-main">
@@ -132,17 +138,11 @@ export function RecommendationEngine({
                           <div className="price-main">
                             <span className={`price-value ${isSelected ? 'price-value--default' : ''}`}>{service.price}</span>
                           </div>
-                          {service.tarifPerKg != null && <span className="price-rate">Tarif Rp {new Intl.NumberFormat('id-ID').format(service.tarifPerKg)}/kg</span>}
+                          {service.tarifPerKg != null && <span className="price-rate">{t('engine.ratePerKg', { value: new Intl.NumberFormat(locale).format(service.tarifPerKg) })}</span>}
                         </div>
                         <div>
                           <span className={`ongkir-badge ${getMarginBadgeClass(service)}`}>
-                            {service.persentaseOngkir != null
-                              ? `Porsi Ongkir: ${service.persentaseOngkir}% dari harga barang`
-                              : service.id === 'ekonomi'
-                                ? 'Porsi Ongkir: 36% dari harga barang'
-                                : service.id === 'reguler'
-                                  ? 'Porsi Ongkir: 48% dari harga barang'
-                                  : 'Porsi Ongkir: 72% dari harga barang'}
+                            {t('engine.porsiOngkir', { pct: getPorsiPercentage(service) })}
                           </span>
                         </div>
                       </>
@@ -160,7 +160,7 @@ export function RecommendationEngine({
                       }}
                       aria-haspopup="dialog"
                     >
-                      <span>Lihat Saran Rekomendasi</span>
+                      <span>{t('engine.viewRecommendation')}</span>
                       <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">open_in_new</span>
                     </button>
                   )}
@@ -176,7 +176,7 @@ export function RecommendationEngine({
                       onSelectService(service)
                     }}
                   >
-                    <span>{isDisabled ? 'Rute Tidak Didukung' : isSelected ? 'Layanan Terpilih' : 'Pilih Layanan'}</span>
+                    <span>{isDisabled ? t('engine.routeUnsupported') : isSelected ? t('engine.serviceSelected') : t('engine.selectService')}</span>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">{isSelected ? 'check' : 'arrow_forward'}</span>
                   </button>
                 </footer>

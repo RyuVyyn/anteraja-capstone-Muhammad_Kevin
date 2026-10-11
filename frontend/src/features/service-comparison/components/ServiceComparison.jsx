@@ -1,11 +1,14 @@
+import { useTranslation } from '../../../i18n'
+
 export function ServiceComparison({ services = [], shippingResult }) {
+  const { t } = useTranslation()
   const hasData = shippingResult?.options?.length > 0
 
   const routeLabel = !shippingResult
-    ? 'Pilih rute dan hitung ongkir untuk melihat perbandingan tarif.'
+    ? t('comparison.routeEmpty')
     : hasData
-    ? `${shippingResult.kota_asal} ke ${shippingResult.kota_tujuan} (berat dihitung ${shippingResult.berat_ditagih} kg)`
-    : `${shippingResult.kota_asal} ke ${shippingResult.kota_tujuan} (layanan tidak tersedia)`
+    ? t('comparison.routeWithData', { origin: shippingResult.kota_asal, destination: shippingResult.kota_tujuan, weight: shippingResult.berat_ditagih })
+    : t('comparison.routeUnavailable', { origin: shippingResult.kota_asal, destination: shippingResult.kota_tujuan })
 
   const beratDitagih = shippingResult?.berat_ditagih
 
@@ -56,7 +59,7 @@ export function ServiceComparison({ services = [], shippingResult }) {
 
     return (
       <span className={`porsi-badge ${getPorsiBadgeType(service)}`}>
-        {getPorsi(service)} {service.id === cheapestService?.id ? '(Paling Terjangkau)' : ''}
+        {getPorsi(service)} {service.id === cheapestService?.id ? t('comparison.mostAffordable') : ''}
       </span>
     )
   }
@@ -65,61 +68,61 @@ export function ServiceComparison({ services = [], shippingResult }) {
     <section className="comparison-section" aria-labelledby="matrixHeading">
       <header className="comparison-header">
         <div>
-          <h2 id="matrixHeading" className="comparison-heading">Perbandingan Lengkap Layanan</h2>
-          <p className="comparison-subtitle">Informasi detail pengiriman untuk rute {routeLabel}</p>
+          <h2 id="matrixHeading" className="comparison-heading">{t('comparison.heading')}</h2>
+          <p className="comparison-subtitle">{t('comparison.subtitle', { route: routeLabel })}</p>
         </div>
         <span className="comparison-badge">
           <span className="material-symbols-outlined" style={{ fontSize: '16px' }} aria-hidden="true">verified_user</span>
-          ✓ Jaminan Standar Pengiriman Anteraja
+          ✓ {t('comparison.badge')}
         </span>
       </header>
 
       <div className="table-wrapper">
         <table className="comparison-table">
-          <caption className="sr-only">Tabel perbandingan spesifikasi tarif, estimasi waktu pengiriman, batas permintaan penjemputan paket, dan batas nominal fitur COD pada setiap opsi layanan Anteraja</caption>
+          <caption className="sr-only">{t('comparison.caption')}</caption>
           <thead>
             <tr>
-              <th scope="col">INFORMASI LAYANAN</th>
-              <th scope="col" className={cheapestService?.id === 'ekonomi' ? 'col-highlight' : ''}>Ekonomi {cheapestService?.id === 'ekonomi' ? '(Pilihan Hemat)' : ''}</th>
-              <th scope="col">Reguler</th>
-              <th scope="col">Next Day</th>
-              <th scope="col">Same Day</th>
+              <th scope="col">{t('comparison.thInfo')}</th>
+              <th scope="col" className={cheapestService?.id === 'ekonomi' ? 'col-highlight' : ''}>{t('comparison.thEconomy')} {cheapestService?.id === 'ekonomi' ? t('comparison.thEconomyCheap') : ''}</th>
+              <th scope="col">{t('comparison.thRegular')}</th>
+              <th scope="col">{t('comparison.thNextDay')}</th>
+              <th scope="col">{t('comparison.thSameDay')}</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row">Tarif Ongkir{beratDitagih == null ? '' : ` (${beratDitagih} kg)`}</th>
+              <th scope="row">{beratDitagih == null ? t('comparison.rowFare') : t('comparison.rowFareWithWeight', { weight: beratDitagih })}</th>
               <td className={getPriceClass(ekonomi)}>{getPrice(ekonomi)}</td>
               <td className={getPriceClass(reguler)}>{getPrice(reguler)}</td>
               <td className={getPriceClass(nextday)}>{getPrice(nextday)}</td>
               <td className={getPriceClass(sameday)}>{getPrice(sameday)}</td>
             </tr>
             <tr>
-              <th scope="row">Porsi Ongkir vs Harga Barang</th>
+              <th scope="row">{t('comparison.rowShare')}</th>
               <td>{renderPorsi(ekonomi)}</td>
               <td>{renderPorsi(reguler)}</td>
               <td>{renderPorsi(nextday)}</td>
               <td>{renderPorsi(sameday)}</td>
             </tr>
             <tr>
-              <th scope="row">Estimasi Waktu Sampai</th>
+              <th scope="row">{t('comparison.rowEta')}</th>
               <td className={getEtaClass(ekonomi)}>{getEta(ekonomi)}</td>
               <td className={getEtaClass(reguler)}>{getEta(reguler)}</td>
               <td className={getEtaClass(nextday)}>{getEta(nextday)}</td>
               <td className={getEtaClass(sameday)}>{getEta(sameday)}</td>
             </tr>
             <tr>
-              <th scope="row">Batas Permintaan Jemput Paket</th>
-              <td>15:00 WIB</td>
-              <td>16:00 WIB</td>
-              <td className="cell-bold">17:00 WIB</td>
-              <td className="cell-disabled">13:00 WIB</td>
+              <th scope="row">{t('comparison.rowPickup')}</th>
+              <td>{t('comparison.pickupEconomy')}</td>
+              <td>{t('comparison.pickupRegular')}</td>
+              <td className="cell-bold">{t('comparison.pickupNextDay')}</td>
+              <td className="cell-disabled">{t('comparison.pickupSameDay')}</td>
             </tr>
             <tr>
-              <th scope="row">Dukungan Bayar di Tempat (COD)</th>
-              <td className="cell-tertiary">Tersedia (Maks Rp 3 Juta)</td>
-              <td className="cell-tertiary">Tersedia (Maks Rp 5 Juta)</td>
-              <td className="cell-tertiary">Tersedia (Maks Rp 5 Juta)</td>
+              <th scope="row">{t('comparison.rowCod')}</th>
+              <td className="cell-tertiary">{t('comparison.cod3m')}</td>
+              <td className="cell-tertiary">{t('comparison.cod5m')}</td>
+              <td className="cell-tertiary">{t('comparison.cod5m')}</td>
               <td className="cell-disabled">-</td>
             </tr>
           </tbody>

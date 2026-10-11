@@ -33,7 +33,7 @@ export function usePostalSearch(query) {
         })
 
         if (!response.ok) {
-          throw new Error('Gagal mencari kode pos')
+          throw new Error('errors.postalSearch')
         }
 
         const payload = await response.json()
@@ -46,7 +46,7 @@ export function usePostalSearch(query) {
         if (controller.signal.aborted) return
         if (isMounted) {
           setIsError(true)
-          setErrorMessage(error.message || 'Kode pos tidak dapat ditemukan saat ini.')
+          setErrorMessage(error.message || 'errors.postalUnavailable')
           setPostalResults([])
         }
       } finally {

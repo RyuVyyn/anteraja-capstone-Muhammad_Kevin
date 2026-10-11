@@ -25,7 +25,7 @@ export function useLocationData() {
         })
 
         if (!provincesResponse.ok) {
-          throw new Error('Gagal mengambil data provinsi')
+          throw new Error('errors.provinces')
         }
 
         const provincePayload = await provincesResponse.json()
@@ -59,7 +59,7 @@ export function useLocationData() {
         if (controller.signal.aborted) return
         if (isMounted) {
           setIsError(true)
-          setErrorMessage(error.message || 'Data lokasi tidak tersedia saat ini.')
+          setErrorMessage(error.message || 'errors.locationUnavailable')
         }
       } finally {
         if (isMounted) {

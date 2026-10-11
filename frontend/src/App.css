@@ -225,6 +225,16 @@ fieldset {
   cursor: pointer;
 }
 
+.lang-switcher button {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
 .lang-switcher .lang-sep {
   margin-left: var(--space-xs);
   margin-right: var(--space-xs);
