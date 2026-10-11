@@ -1,0 +1,212 @@
+[
+  {
+    "hub_id": "HUB-001",
+    "name": "HUB-001",
+    "lat": -6.127103,
+    "lng": 106.819626,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-002",
+    "name": "HUB-002",
+    "lat": -6.234051,
+    "lng": 106.966253,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-003",
+    "name": "HUB-003",
+    "lat": -6.185292,
+    "lng": 106.905231,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-004",
+    "name": "HUB-004",
+    "lat": -6.15697,
+    "lng": 106.780247,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-005",
+    "name": "HUB-005",
+    "lat": -6.232238,
+    "lng": 106.763578,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-006",
+    "name": "HUB-006",
+    "lat": -6.210788,
+    "lng": 106.754093,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-007",
+    "name": "HUB-007",
+    "lat": -6.35631,
+    "lng": 106.841568,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-008",
+    "name": "HUB-008",
+    "lat": -6.233808,
+    "lng": 106.974204,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-009",
+    "name": "HUB-009",
+    "lat": -6.163228,
+    "lng": 106.732525,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-010",
+    "name": "HUB-010",
+    "lat": -6.1393,
+    "lng": 106.871926,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-011",
+    "name": "HUB-011",
+    "lat": -6.233011,
+    "lng": 106.976511,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-012",
+    "name": "HUB-012",
+    "lat": -6.333332,
+    "lng": 106.87424,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-013",
+    "name": "HUB-013",
+    "lat": -6.377389,
+    "lng": 106.842535,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-014",
+    "name": "HUB-014",
+    "lat": -6.164882,
+    "lng": 106.879914,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-015",
+    "name": "HUB-015",
+    "lat": -6.256898,
+    "lng": 106.74934,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-016",
+    "name": "HUB-016",
+    "lat": -6.304609,
+    "lng": 106.962518,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-017",
+    "name": "HUB-017",
+    "lat": -6.280394,
+    "lng": 106.736302,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-018",
+    "name": "HUB-018",
+    "lat": -6.297132,
+    "lng": 106.770163,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-019",
+    "name": "HUB-019",
+    "lat": -6.21222,
+    "lng": 106.708994,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-020",
+    "name": "HUB-020",
+    "lat": -6.370618,
+    "lng": 106.699248,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-021",
+    "name": "HUB-021",
+    "lat": -6.201614,
+    "lng": 106.737131,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-022",
+    "name": "HUB-022",
+    "lat": -6.303486,
+    "lng": 106.939455,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-023",
+    "name": "HUB-023",
+    "lat": -6.242384,
+    "lng": 106.762195,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-024",
+    "name": "HUB-024",
+    "lat": -6.325158,
+    "lng": 106.828436,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-025",
+    "name": "HUB-025",
+    "lat": -6.15726,
+    "lng": 106.899383,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-026",
+    "name": "HUB-026",
+    "lat": -6.202631,
+    "lng": 106.828747,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-027",
+    "name": "HUB-027",
+    "lat": -6.31786,
+    "lng": 106.872952,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-028",
+    "name": "HUB-028",
+    "lat": -6.215705,
+    "lng": 106.861821,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-029",
+    "name": "HUB-029",
+    "lat": -6.207554,
+    "lng": 106.952501,
+    "is_placeholder": true
+  },
+  {
+    "hub_id": "HUB-030",
+    "name": "HUB-030",
+    "lat": -6.249318,
+    "lng": 106.788124,
+    "is_placeholder": true
+  }
+]

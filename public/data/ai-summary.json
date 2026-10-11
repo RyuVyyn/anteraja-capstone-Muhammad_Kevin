@@ -1,0 +1,41 @@
+{
+"summary": "Sebanyak 30 hub tercatat memiliki nilai avg_dwell_hours yang melebihi threshold_hours sebesar 6. Hub dengan avg_dwell_hours tertinggi adalah HUB-007 dengan 39.41345323205243 jam, diikuti oleh HUB-025 dengan 39.30076792388719 jam. Seluruh 30 hub yang terdaftar masuk ke dalam kategori hub prioritas.",
+"priority_hubs": [
+"HUB-007",
+"HUB-025",
+"HUB-012",
+"HUB-018",
+"HUB-020",
+"HUB-003",
+"HUB-006",
+"HUB-015",
+"HUB-021",
+"HUB-027",
+"HUB-004",
+"HUB-011",
+"HUB-013",
+"HUB-028",
+"HUB-009",
+"HUB-022",
+"HUB-014",
+"HUB-001",
+"HUB-029",
+"HUB-005",
+"HUB-017",
+"HUB-019",
+"HUB-023",
+"HUB-002",
+"HUB-030",
+"HUB-024",
+"HUB-016",
+"HUB-010",
+"HUB-008",
+"HUB-026"
+],
+"next_checks": [
+"Verifikasi 15 open_visits dan 52 invalid_pairs dengan invalid_pct sebesar 13 pada HUB-026.",
+"Periksa 14 open_visits serta 47 invalid_pairs dengan invalid_pct sebesar 11.89873417721519 pada HUB-020.",
+"Periksa 14 open_visits serta 42 invalid_pairs dengan invalid_pct sebesar 11.506849315068493 pada HUB-009.",
+"Verifikasi data pencatatan dwell time pada HUB-007, HUB-025, HUB-012, dan HUB-018 yang memiliki avg_dwell_hours di atas 38 jam."
+]
+}
