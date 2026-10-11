@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Tabular numerals for all numeric data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Leaflet Map styling matching DESIGN.md */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-container {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  width: 100%;
+  height: 100%;
+  background: #f1f5f9;
+}
+
+/* Custom Marker Pin Animation */
+.custom-hub-pin {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-hub-pin:hover {
+  transform: translateY(-4px) scale(1.08);
+  z-index: 1000 !important;
+}
+
+.custom-hub-pin.is-selected {
+  transform: translateY(-6px) scale(1.15);
+  z-index: 1001 !important;
+}
